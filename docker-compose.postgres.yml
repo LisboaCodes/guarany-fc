@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  guarany-postgres:
+    image: postgres:16-alpine
+    container_name: guarany-postgres
+    restart: unless-stopped
+    ports:
+      - "5433:5432"  # Porta externa diferente para não conflitar
+    environment:
+      POSTGRES_USER: guarany_user
+      POSTGRES_PASSWORD: Guarany2024!Secure
+      POSTGRES_DB: guarany_fc
+    volumes:
+      - guarany_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U guarany_user -d guarany_fc"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - guarany-network
+
+volumes:
+  guarany_postgres_data:
+    driver: local
+
+networks:
+  guarany-network:
+    driver: bridge
