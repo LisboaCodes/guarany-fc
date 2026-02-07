@@ -1,0 +1,188 @@
+// Guarany FC - Sócio Torcedor Database Schema
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Usuários do sistema (Admin/Operador)
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String   // bcrypt hash
+  role      UserRole @default(OPERATOR)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relações
+  membersCreated Member[]   @relation("MemberCreatedBy")
+  paymentsRegistered Payment[] @relation("PaymentRegisteredBy")
+  auditLogs      AuditLog[]
+
+  @@index([email])
+  @@index([active])
+  @@map("users")
+}
+
+enum UserRole {
+  ADMIN
+  OPERATOR
+}
+
+// Sócios torcedores
+model Member {
+  id        String   @id @default(cuid())
+  name      String
+  cpf       String   @unique
+  birthDate DateTime
+  phone     String   // WhatsApp
+  email     String?
+  address   String?
+  active    Boolean  @default(true)
+  joinDate  DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Foreign Keys
+  createdById String
+  createdBy   User   @relation("MemberCreatedBy", fields: [createdById], references: [id])
+
+  // Relações
+  payments Payment[]
+  notificationLogs NotificationLog[]
+
+  @@index([cpf])
+  @@index([active])
+  @@index([birthDate])
+  @@index([name])
+  @@map("members")
+}
+
+// Pagamentos mensais
+model Payment {
+  id              String        @id @default(cuid())
+  amount          Decimal       @db.Decimal(10, 2)
+  method          PaymentMethod
+  status          PaymentStatus @default(PENDING)
+  referenceMonth  Int           // 1-12
+  referenceYear   Int           // 2026
+  dueDate         DateTime
+  paidAt          DateTime?
+  notes           String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Foreign Keys
+  memberId       String
+  member         Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  registeredById String
+  registeredBy   User   @relation("PaymentRegisteredBy", fields: [registeredById], references: [id])
+
+  @@unique([memberId, referenceMonth, referenceYear])
+  @@index([memberId])
+  @@index([status])
+  @@index([referenceMonth, referenceYear])
+  @@index([dueDate])
+  @@map("payments")
+}
+
+enum PaymentMethod {
+  PIX
+  CASH
+  CARD
+  BOLETO
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+// Configurações do sistema
+model SystemSettings {
+  id    String @id @default("singleton")
+
+  // Valores financeiros
+  membershipValue Decimal @default(50.00) @db.Decimal(10, 2)
+  paymentDueDayOfMonth Int @default(10)
+
+  // Evolution API
+  evolutionApiUrl      String?
+  evolutionApiKey      String?
+  evolutionInstance    String?
+
+  // Templates de mensagens
+  birthdayMessageEnabled Boolean @default(true)
+  birthdayMessageTemplate String @default("🎉 Feliz Aniversário, {name}! 🎂\nToda a família Guarany FC deseja um dia especial para você! 🟢⚪\nObrigado por fazer parte do nosso time! ⚽")
+
+  reminderMessageEnabled Boolean @default(true)
+  reminderMessageTemplate String @default("Olá, {name}! 👋\nLembrando que o pagamento da mensalidade do Sócio Torcedor Guarany FC referente a *{month}/{year}* vence no dia *{dueDate}*.\nValor: R$ {amount}\nContamos com você! 🟢⚪⚽")
+
+  reminderDaysBeforeDue Int @default(5)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("system_settings")
+}
+
+// Log de notificações WhatsApp
+model NotificationLog {
+  id        String             @id @default(cuid())
+  type      NotificationType
+  status    NotificationStatus @default(PENDING)
+  message   String
+  phone     String
+  sentAt    DateTime?
+  errorMessage String?
+  createdAt DateTime           @default(now())
+
+  // Foreign Keys
+  memberId  String?
+  member    Member? @relation(fields: [memberId], references: [id], onDelete: SetNull)
+
+  @@index([type])
+  @@index([status])
+  @@index([createdAt])
+  @@map("notification_logs")
+}
+
+enum NotificationType {
+  BIRTHDAY
+  PAYMENT_REMINDER
+  PAYMENT_OVERDUE
+  WELCOME
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+// Log de auditoria
+model AuditLog {
+  id         String   @id @default(cuid())
+  action     String
+  entityType String
+  entityId   String?
+  changes    Json?    // JSON com before/after
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  // Foreign Keys
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([entityType])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
