@@ -1,0 +1,36 @@
+# ============================================
+# VARIÁVEIS PARA ADICIONAR NO COOLIFY - GUARANY FC
+# ============================================
+# Copie e cole no painel do Coolify > Environment Variables
+# ============================================
+
+# Database (PostgreSQL - Usar o mesmo servidor do FileHub)
+# HOST INTERNO COOLIFY: kg8cwk8kw0ggcooog0w0kws0:5432
+DATABASE_URL=postgresql://filehub:FileHub2024@Secure!Pass@kg8cwk8kw0ggcooog0w0kws0:5432/guarany_fc
+
+# NextAuth (Gerar novo secret!)
+NEXTAUTH_URL=http://creativenext.com.br/guarany
+NEXTAUTH_SECRET=gere-um-novo-secret-aqui
+
+# Evolution API (WhatsApp - Mesma do FileHub)
+EVOLUTION_API_URL=https://evolution.creativenext.com.br
+EVOLUTION_API_KEY=Mel102424
+EVOLUTION_INSTANCE=GUARANY
+EVOLUTION_INSTANCE_TOKEN=ECE2253C3725-475A-857F-0ADBAF005502
+
+# Cron Security
+CRON_SECRET=gere-um-secret-aleatorio
+
+# App
+NODE_ENV=production
+NEXT_PUBLIC_APP_NAME=Guarany FC
+
+# ============================================
+# INSTRUÇÕES:
+# ============================================
+# 1. No Coolify, vá em Environment Variables
+# 2. Cole todas as variáveis acima
+# 3. GERE UM NOVO NEXTAUTH_SECRET com o botão "Generate Random"
+# 4. GERE UM NOVO CRON_SECRET com o botão "Generate Random"
+# 5. Salve e faça o deploy
+# ============================================
