@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma'
 // GET /api/members/[id] - Get single member
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -14,8 +14,9 @@ export async function GET(
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
 
+    const { id } = await params
     const member = await prisma.member.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         createdBy: {
           select: { name: true, email: true }
@@ -45,7 +46,7 @@ export async function GET(
 // PUT /api/members/[id] - Update member
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -53,12 +54,13 @@ export async function PUT(
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
 
+    const { id } = await params
     const data = await request.json()
     const { name, cpf, birthDate, phone, email, address, active } = data
 
     // Get current member for audit log
     const currentMember = await prisma.member.findUnique({
-      where: { id: params.id }
+      where: { id }
     })
 
     if (!currentMember) {
@@ -89,7 +91,7 @@ export async function PUT(
     if (active !== undefined) updateData.active = active
 
     const member = await prisma.member.update({
-      where: { id: params.id },
+      where: { id },
       data: updateData,
       include: {
         createdBy: {
@@ -133,7 +135,7 @@ export async function PUT(
 // DELETE /api/members/[id] - Delete member (soft delete)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -141,8 +143,9 @@ export async function DELETE(
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
 
+    const { id } = await params
     const member = await prisma.member.findUnique({
-      where: { id: params.id }
+      where: { id }
     })
 
     if (!member) {
@@ -151,7 +154,7 @@ export async function DELETE(
 
     // Soft delete by setting active to false
     const updatedMember = await prisma.member.update({
-      where: { id: params.id },
+      where: { id },
       data: { active: false }
     })
 

@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma'
 // PUT /api/payments/[id] - Update payment
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -14,12 +14,13 @@ export async function PUT(
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
 
+    const { id } = await params
     const data = await request.json()
     const { amount, method, status, dueDate, paidAt, notes } = data
 
     // Get current payment for audit log
     const currentPayment = await prisma.payment.findUnique({
-      where: { id: params.id }
+      where: { id }
     })
 
     if (!currentPayment) {
@@ -40,7 +41,7 @@ export async function PUT(
     }
 
     const payment = await prisma.payment.update({
-      where: { id: params.id },
+      where: { id },
       data: updateData,
       include: {
         member: {
@@ -79,7 +80,7 @@ export async function PUT(
 // DELETE /api/payments/[id] - Cancel payment
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -87,8 +88,9 @@ export async function DELETE(
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
 
+    const { id } = await params
     const payment = await prisma.payment.findUnique({
-      where: { id: params.id }
+      where: { id }
     })
 
     if (!payment) {
@@ -96,7 +98,7 @@ export async function DELETE(
     }
 
     const updatedPayment = await prisma.payment.update({
-      where: { id: params.id },
+      where: { id },
       data: { status: 'CANCELLED' }
     })
 
