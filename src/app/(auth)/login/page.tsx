@@ -56,7 +56,7 @@ export default function LoginPage() {
               </svg>
             </div>
             <h1 className="text-3xl font-black text-[#004D29] tracking-tight">
-              GUARANY FC
+              ASSOCIAÇÃO ATLÉTICA GUARANY
             </h1>
             <p className="text-[#006437] font-semibold mt-1">
               Sistema de Sócio Torcedor
@@ -135,7 +135,7 @@ export default function LoginPage() {
 
         {/* Texto abaixo do card */}
         <p className="text-center text-white/80 text-sm mt-6 font-medium">
-          © 2026 Guarany FC - Todos os direitos reservados
+          © 2026 Associação Atlética Guarany - Todos os direitos reservados
         </p>
       </div>
     </div>

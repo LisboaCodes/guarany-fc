@@ -1,6 +1,6 @@
-# 🟢⚪ Guarany FC - Sistema de Sócio Torcedor
+# 🟢⚪ Associação Atlética Guarany - Sistema de Sócio Torcedor
 
-Sistema completo de gerenciamento de sócios torcedores para o Guarany Futebol Clube.
+Sistema completo de gerenciamento de sócios torcedores para a Associação Atlética Guarany.
 
 ![Next.js](https://img.shields.io/badge/Next.js-16.1.6-black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)
@@ -327,8 +327,8 @@ Para dúvidas ou problemas:
 
 ## 📄 Licença
 
-© 2026 Guarany FC - Todos os direitos reservados
+© 2026 Associação Atlética Guarany - Todos os direitos reservados
 
 ---
 
-**Desenvolvido com 💚 para o Guarany Futebol Clube**
+**Desenvolvido com 💚 para a Associação Atlética Guarany**

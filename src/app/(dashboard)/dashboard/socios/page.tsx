@@ -100,7 +100,7 @@ export default function SociosPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Sócios Torcedores</h1>
           <p className="text-muted-foreground mt-1">
-            Gerencie os sócios do Guarany FC
+            Gerencie os sócios da Associação Atlética Guarany
           </p>
         </div>
         <Link href="/dashboard/socios/novo">

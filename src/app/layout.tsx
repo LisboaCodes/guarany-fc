@@ -6,8 +6,8 @@ import SessionProvider from '@/components/providers/SessionProvider'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Guarany FC - Sócio Torcedor',
-  description: 'Sistema de gestão de sócios torcedores do Guarany Futebol Clube',
+  title: 'Associação Atlética Guarany - Sócio Torcedor',
+  description: 'Sistema de gestão de sócios torcedores da Associação Atlética Guarany',
 }
 
 export default function RootLayout({

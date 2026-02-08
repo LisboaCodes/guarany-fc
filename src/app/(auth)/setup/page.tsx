@@ -74,7 +74,7 @@ export default function SetupPage() {
             </svg>
           </div>
           <h1 className="text-3xl font-black text-[#004D29] tracking-tight mb-1">
-            GUARANY FC
+            ASSOCIAÇÃO ATLÉTICA GUARANY
           </h1>
           <p className="text-[#006437] font-semibold">Configuração Inicial</p>
         </div>
@@ -180,7 +180,7 @@ export default function SetupPage() {
 
       {/* Texto abaixo do card */}
       <p className="text-center text-white/80 text-sm mt-6 font-medium absolute bottom-8 left-0 right-0 z-10">
-        © 2026 Guarany FC - Todos os direitos reservados
+        © 2026 Associação Atlética Guarany - Todos os direitos reservados
       </p>
     </div>
   );
