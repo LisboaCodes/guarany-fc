@@ -178,41 +178,41 @@ export default function DashboardPage() {
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-3">
-            <div className="flex items-center justify-between p-4 rounded-lg border bg-emerald-50 dark:bg-emerald-950">
+            <div className="flex items-center justify-between p-4 rounded-lg border bg-emerald-600">
               <div className="flex items-center space-x-3">
-                <div className="h-2 w-2 rounded-full bg-emerald-600 animate-pulse"></div>
+                <div className="h-2 w-2 rounded-full bg-white animate-pulse"></div>
                 <div>
-                  <p className="text-sm font-medium">Autenticação</p>
-                  <p className="text-xs text-muted-foreground">Sistema ativo</p>
+                  <p className="text-sm font-medium text-white">Autenticação</p>
+                  <p className="text-xs text-emerald-100">Sistema ativo</p>
                 </div>
               </div>
-              <Badge variant="outline" className="bg-emerald-600 text-white border-emerald-600">
+              <Badge className="bg-white text-emerald-600 hover:bg-white/90">
                 Ativo
               </Badge>
             </div>
 
-            <div className="flex items-center justify-between p-4 rounded-lg border bg-blue-50 dark:bg-blue-950">
+            <div className="flex items-center justify-between p-4 rounded-lg border bg-blue-600">
               <div className="flex items-center space-x-3">
-                <div className="h-2 w-2 rounded-full bg-blue-600 animate-pulse"></div>
+                <div className="h-2 w-2 rounded-full bg-white animate-pulse"></div>
                 <div>
-                  <p className="text-sm font-medium">Banco de Dados</p>
-                  <p className="text-xs text-muted-foreground">Conectado</p>
+                  <p className="text-sm font-medium text-white">Banco de Dados</p>
+                  <p className="text-xs text-blue-100">Conectado</p>
                 </div>
               </div>
-              <Badge variant="outline" className="bg-blue-600 text-white border-blue-600">
+              <Badge className="bg-white text-blue-600 hover:bg-white/90">
                 Online
               </Badge>
             </div>
 
-            <div className="flex items-center justify-between p-4 rounded-lg border bg-amber-50 dark:bg-amber-950">
+            <div className="flex items-center justify-between p-4 rounded-lg border bg-slate-600">
               <div className="flex items-center space-x-3">
-                <div className="h-2 w-2 rounded-full bg-amber-600"></div>
+                <div className="h-2 w-2 rounded-full bg-white/60"></div>
                 <div>
-                  <p className="text-sm font-medium">API WhatsApp</p>
-                  <p className="text-xs text-muted-foreground">Aguardando config</p>
+                  <p className="text-sm font-medium text-white">API WhatsApp</p>
+                  <p className="text-xs text-slate-100">Aguardando config</p>
                 </div>
               </div>
-              <Badge variant="outline" className="bg-amber-600 text-white border-amber-600">
+              <Badge className="bg-white text-slate-600 hover:bg-white/90">
                 Pendente
               </Badge>
             </div>

@@ -1,12 +1,34 @@
 'use client'
 
 import { useSession, signOut } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
+import Link from 'next/link'
 import { useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
-import { LogOut, Shield } from 'lucide-react'
+import {
+  LogOut,
+  Shield,
+  LayoutDashboard,
+  Users,
+  DollarSign,
+  Settings,
+  Menu
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from '@/components/ui/sheet'
+
+const navigation = [
+  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { name: 'Sócios', href: '/dashboard/socios', icon: Users },
+  { name: 'Pagamentos', href: '/dashboard/pagamentos', icon: DollarSign },
+  { name: 'Configurações', href: '/dashboard/configuracoes', icon: Settings },
+]
 
 export default function DashboardLayout({
   children,
@@ -15,6 +37,7 @@ export default function DashboardLayout({
 }) {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const pathname = usePathname()
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -48,19 +71,76 @@ export default function DashboardLayout({
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
-          {/* Logo */}
+        <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
+          {/* Mobile Menu */}
           <div className="flex items-center gap-3">
-            <div className="bg-gradient-to-br from-[#006437] to-[#0A6938] p-2 rounded-xl shadow-md">
-              <Shield className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-black bg-gradient-to-r from-[#006437] to-[#0A6938] bg-clip-text text-transparent">
-                GUARANY FC
-              </h1>
-              <p className="text-xs text-muted-foreground font-medium">Sistema de Sócio Torcedor</p>
+            <Sheet>
+              <SheetTrigger asChild className="lg:hidden">
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-64">
+                <div className="flex flex-col gap-4 mt-8">
+                  {navigation.map((item) => {
+                    const Icon = item.icon
+                    const isActive = pathname === item.href
+                    return (
+                      <Link
+                        key={item.name}
+                        href={item.href}
+                        className={cn(
+                          "flex items-center gap-3 px-3 py-2 rounded-lg transition-colors",
+                          isActive
+                            ? "bg-[#006437] text-white"
+                            : "hover:bg-accent"
+                        )}
+                      >
+                        <Icon className="h-5 w-5" />
+                        <span className="font-medium">{item.name}</span>
+                      </Link>
+                    )
+                  })}
+                </div>
+              </SheetContent>
+            </Sheet>
+
+            {/* Logo */}
+            <div className="flex items-center gap-3">
+              <div className="bg-gradient-to-br from-[#006437] to-[#0A6938] p-2 rounded-xl shadow-md">
+                <Shield className="w-6 h-6 text-white" />
+              </div>
+              <div className="hidden sm:block">
+                <h1 className="text-xl font-black bg-gradient-to-r from-[#006437] to-[#0A6938] bg-clip-text text-transparent">
+                  GUARANY FC
+                </h1>
+                <p className="text-xs text-muted-foreground font-medium">Sistema de Sócio Torcedor</p>
+              </div>
             </div>
           </div>
+
+          {/* Desktop Navigation */}
+          <nav className="hidden lg:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
+            {navigation.map((item) => {
+              const Icon = item.icon
+              const isActive = pathname === item.href
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={cn(
+                    "flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium",
+                    isActive
+                      ? "bg-[#006437] text-white"
+                      : "hover:bg-accent"
+                  )}
+                >
+                  <Icon className="h-4 w-4" />
+                  {item.name}
+                </Link>
+              )
+            })}
+          </nav>
 
           {/* User Menu */}
           <div className="flex items-center gap-3">
