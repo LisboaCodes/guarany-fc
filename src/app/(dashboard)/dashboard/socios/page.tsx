@@ -22,7 +22,8 @@ import {
   UserX,
   UserCheck,
   AlertCircle,
-  Loader2
+  Loader2,
+  Edit
 } from 'lucide-react'
 
 interface Member {
@@ -91,6 +92,25 @@ export default function SociosPage() {
 
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('pt-BR')
+  }
+
+  const toggleMemberStatus = async (memberId: string, currentStatus: boolean) => {
+    try {
+      const res = await fetch(`/api/members/${memberId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ active: !currentStatus })
+      })
+
+      if (res.ok) {
+        // Refresh the list
+        fetchMembers()
+      } else {
+        console.error('Error toggling member status')
+      }
+    } catch (error) {
+      console.error('Error toggling member status:', error)
+    }
   }
 
   return (
@@ -221,11 +241,25 @@ export default function SociosPage() {
                         )}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Link href={`/dashboard/socios/${member.id}`}>
-                          <Button variant="ghost" size="sm">
-                            <Eye className="h-4 w-4" />
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toggleMemberStatus(member.id, member.active)}
+                            title={member.active ? 'Desativar sócio' : 'Ativar sócio'}
+                          >
+                            {member.active ? (
+                              <UserX className="h-4 w-4 text-orange-600" />
+                            ) : (
+                              <UserCheck className="h-4 w-4 text-emerald-600" />
+                            )}
                           </Button>
-                        </Link>
+                          <Link href={`/dashboard/socios/${member.id}`}>
+                            <Button variant="ghost" size="sm" title="Ver detalhes">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
