@@ -112,7 +112,7 @@ export default function DashboardLayout({
               </div>
               <div className="hidden sm:block">
                 <h1 className="text-xl font-black bg-gradient-to-r from-[#006437] to-[#0A6938] bg-clip-text text-transparent">
-                  ASSOCIAÇÃO ATLÉTICA GUARANY
+                  AA GUARANY
                 </h1>
                 <p className="text-xs text-muted-foreground font-medium">Sistema de Sócio Torcedor</p>
               </div>

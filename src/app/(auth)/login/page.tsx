@@ -56,7 +56,7 @@ export default function LoginPage() {
               </svg>
             </div>
             <h1 className="text-3xl font-black text-[#004D29] tracking-tight">
-              ASSOCIAÇÃO ATLÉTICA GUARANY
+              AA GUARANY
             </h1>
             <p className="text-[#006437] font-semibold mt-1">
               Sistema de Sócio Torcedor

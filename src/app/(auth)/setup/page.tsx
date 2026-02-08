@@ -74,7 +74,7 @@ export default function SetupPage() {
             </svg>
           </div>
           <h1 className="text-3xl font-black text-[#004D29] tracking-tight mb-1">
-            ASSOCIAÇÃO ATLÉTICA GUARANY
+            AA GUARANY
           </h1>
           <p className="text-[#006437] font-semibold">Configuração Inicial</p>
         </div>
