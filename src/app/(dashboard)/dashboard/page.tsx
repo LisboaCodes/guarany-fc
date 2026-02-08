@@ -40,14 +40,16 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [recentActivity, setRecentActivity] = useState<Activity[]>([])
+  const [filterDays, setFilterDays] = useState(30)
 
   useEffect(() => {
     fetchDashboardData()
-  }, [])
+  }, [filterDays])
 
   const fetchDashboardData = async () => {
+    setLoading(true)
     try {
-      const res = await fetch('/api/dashboard/stats')
+      const res = await fetch(`/api/dashboard/stats?days=${filterDays}`)
       const data = await res.json()
 
       if (res.ok) {
@@ -172,6 +174,19 @@ export default function DashboardPage() {
                 <CardDescription>Últimas ações no sistema</CardDescription>
               </div>
               <Activity className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <div className="flex flex-wrap gap-2 mt-4">
+              {[7, 15, 30, 90, 120, 365].map((days) => (
+                <Button
+                  key={days}
+                  variant={filterDays === days ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setFilterDays(days)}
+                  className={filterDays === days ? 'bg-[#006437] hover:bg-[#005030]' : ''}
+                >
+                  {days === 365 ? '1 ano' : `${days} dias`}
+                </Button>
+              ))}
             </div>
           </CardHeader>
           <CardContent>

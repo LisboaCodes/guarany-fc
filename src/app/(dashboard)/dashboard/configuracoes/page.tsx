@@ -67,7 +67,7 @@ export default function ConfiguracoesPage() {
       id: 'whatsapp',
       name: 'WhatsApp (Evolution API)',
       description: 'Integração completa com WhatsApp para envio automático de notificações',
-      price: 19.90,
+      price: 29.90,
       icon: MessageSquare,
       status: 'available',
       features: [
@@ -495,14 +495,17 @@ export default function ConfiguracoesPage() {
                           </p>
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          Para implementar este módulo, entre em contato pelo WhatsApp ou email:
+                          Para implementar este módulo, entre em contato pelo WhatsApp:
                         </p>
                         <div className="space-y-2">
-                          <Button className="w-full" variant="outline">
-                            📱 WhatsApp: (XX) XXXXX-XXXX
-                          </Button>
-                          <Button className="w-full" variant="outline">
-                            ✉️ Email: contato@guaranyfc.com.br
+                          <Button
+                            className="w-full bg-[#25D366] hover:bg-[#1fb355] text-white"
+                            onClick={() => {
+                              const message = `Olá! Gostaria de adquirir o módulo *${module.name}* (${formatCurrency(module.price)}) para o sistema AA Guarany.`
+                              window.open(`https://wa.me/557999062129?text=${encodeURIComponent(message)}`, '_blank')
+                            }}
+                          >
+                            📱 Solicitar via WhatsApp
                           </Button>
                         </div>
                       </div>
