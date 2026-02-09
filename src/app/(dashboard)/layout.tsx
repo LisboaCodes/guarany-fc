@@ -14,7 +14,9 @@ import {
   Users,
   DollarSign,
   Settings,
-  Menu
+  Menu,
+  User,
+  ChevronDown
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
@@ -22,12 +24,24 @@ import {
   SheetContent,
   SheetTrigger,
 } from '@/components/ui/sheet'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Sócios', href: '/dashboard/socios', icon: Users },
   { name: 'Pagamentos', href: '/dashboard/pagamentos', icon: DollarSign },
   { name: 'Configurações', href: '/dashboard/configuracoes', icon: Settings },
+]
+
+const userNavigation = [
+  { name: 'Meu Perfil', href: '/dashboard/perfil' },
 ]
 
 export default function DashboardLayout({
@@ -144,27 +158,42 @@ export default function DashboardLayout({
 
           {/* User Menu */}
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-3 px-4 py-2 rounded-lg border bg-card">
-              <Avatar className="h-8 w-8 border-2 border-[#006437]">
-                <AvatarFallback className="bg-[#006437] text-white font-bold text-xs">
-                  {userInitials}
-                </AvatarFallback>
-              </Avatar>
-              <div className="hidden md:block text-right">
-                <p className="text-sm font-semibold leading-none">{session.user.name}</p>
-                <Badge variant="outline" className="mt-1 text-xs bg-[#006437]/10 text-[#006437] border-[#006437]/20">
-                  {session.user.role}
-                </Badge>
-              </div>
-            </div>
-            <Button
-              onClick={() => signOut({ callbackUrl: '/login' })}
-              variant="outline"
-              size="icon"
-              className="hover:bg-destructive hover:text-destructive-foreground"
-            >
-              <LogOut className="h-4 w-4" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="flex items-center gap-3 px-4 py-2 rounded-lg border bg-card hover:bg-accent">
+                  <Avatar className="h-8 w-8 border-2 border-[#006437]">
+                    <AvatarFallback className="bg-[#006437] text-white font-bold text-xs">
+                      {userInitials}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="hidden md:block text-left">
+                    <p className="text-sm font-semibold leading-none">{session.user.name}</p>
+                    <Badge variant="outline" className="mt-1 text-xs bg-[#006437]/10 text-[#006437] border-[#006437]/20">
+                      {session.user.role}
+                    </Badge>
+                  </div>
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/dashboard/perfil" className="flex items-center cursor-pointer">
+                    <User className="mr-2 h-4 w-4" />
+                    Meu Perfil
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => signOut({ callbackUrl: '/login' })}
+                  className="text-red-600 focus:text-red-600 cursor-pointer"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sair
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </header>

@@ -31,7 +31,9 @@ import {
   Edit,
   UserX,
   UserCheck,
-  DollarSign
+  DollarSign,
+  Trash2,
+  Edit2
 } from 'lucide-react'
 
 interface Payment {
@@ -76,6 +78,13 @@ export default function SocioDetailPage() {
     phone: '',
     email: '',
     address: ''
+  })
+  const [editingPayment, setEditingPayment] = useState<Payment | null>(null)
+  const [deletingPayment, setDeletingPayment] = useState<Payment | null>(null)
+  const [paymentFormData, setPaymentFormData] = useState({
+    amount: '',
+    status: '',
+    method: ''
   })
 
   useEffect(() => {
@@ -150,6 +159,67 @@ export default function SocioDetailPage() {
       }
     } catch (error) {
       console.error('Error toggling member status:', error)
+    }
+  }
+
+  const handleEditPayment = (payment: Payment) => {
+    setEditingPayment(payment)
+    setPaymentFormData({
+      amount: payment.amount.toString(),
+      status: payment.status,
+      method: payment.method
+    })
+  }
+
+  const handleSavePayment = async () => {
+    if (!editingPayment) return
+
+    setSaving(true)
+    try {
+      const res = await fetch(`/api/payments/${editingPayment.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: parseFloat(paymentFormData.amount),
+          status: paymentFormData.status,
+          method: paymentFormData.method
+        })
+      })
+
+      if (res.ok) {
+        fetchMember()
+        setEditingPayment(null)
+      } else {
+        const data = await res.json()
+        setError(data.error || 'Erro ao atualizar pagamento')
+      }
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleDeletePayment = async () => {
+    if (!deletingPayment) return
+
+    setSaving(true)
+    try {
+      const res = await fetch(`/api/payments/${deletingPayment.id}`, {
+        method: 'DELETE'
+      })
+
+      if (res.ok) {
+        fetchMember()
+        setDeletingPayment(null)
+      } else {
+        const data = await res.json()
+        setError(data.error || 'Erro ao excluir pagamento')
+      }
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -396,6 +466,7 @@ export default function SocioDetailPage() {
                       <TableHead>Método</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Pago em</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -410,6 +481,26 @@ export default function SocioDetailPage() {
                         <TableCell>{getStatusBadge(payment.status)}</TableCell>
                         <TableCell>
                           {payment.paidAt ? formatDate(payment.paidAt) : '-'}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEditPayment(payment)}
+                              title="Editar pagamento"
+                            >
+                              <Edit2 className="h-4 w-4 text-blue-600" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setDeletingPayment(payment)}
+                              title="Excluir pagamento"
+                            >
+                              <Trash2 className="h-4 w-4 text-red-600" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -443,6 +534,104 @@ export default function SocioDetailPage() {
               onClick={handleToggleActive}
             >
               {member.active ? 'Desativar' : 'Ativar'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Payment Dialog */}
+      <Dialog open={!!editingPayment} onOpenChange={(open) => !open && setEditingPayment(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Pagamento</DialogTitle>
+            <DialogDescription>
+              Altere os dados do pagamento de {editingPayment?.referenceMonth}/{editingPayment?.referenceYear}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Valor (R$)</label>
+              <Input
+                type="number"
+                step="0.01"
+                value={paymentFormData.amount}
+                onChange={(e) => setPaymentFormData({ ...paymentFormData, amount: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Método</label>
+              <select
+                className="w-full px-3 py-2 border rounded-md"
+                value={paymentFormData.method}
+                onChange={(e) => setPaymentFormData({ ...paymentFormData, method: e.target.value })}
+              >
+                <option value="PIX">PIX</option>
+                <option value="CASH">Dinheiro</option>
+                <option value="CARD">Cartão</option>
+                <option value="BOLETO">Boleto</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Status</label>
+              <select
+                className="w-full px-3 py-2 border rounded-md"
+                value={paymentFormData.status}
+                onChange={(e) => setPaymentFormData({ ...paymentFormData, status: e.target.value })}
+              >
+                <option value="PENDING">Pendente</option>
+                <option value="PAID">Pago</option>
+                <option value="OVERDUE">Atrasado</option>
+                <option value="CANCELLED">Cancelado</option>
+              </select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingPayment(null)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSavePayment} disabled={saving}>
+              {saving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Salvando...
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" />
+                  Salvar
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Payment Dialog */}
+      <Dialog open={!!deletingPayment} onOpenChange={(open) => !open && setDeletingPayment(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Excluir Pagamento?</DialogTitle>
+            <DialogDescription>
+              Tem certeza que deseja excluir o pagamento de {deletingPayment?.referenceMonth}/{deletingPayment?.referenceYear}?
+              Esta ação não pode ser desfeita.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeletingPayment(null)}>
+              Cancelar
+            </Button>
+            <Button variant="destructive" onClick={handleDeletePayment} disabled={saving}>
+              {saving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Excluindo...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Excluir
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
