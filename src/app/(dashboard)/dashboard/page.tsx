@@ -176,7 +176,7 @@ export default function DashboardPage() {
               <Activity className="h-4 w-4 text-muted-foreground" />
             </div>
             <div className="flex flex-wrap gap-2 mt-4">
-              {[7, 15, 30, 90, 120, 365].map((days) => (
+              {[1, 7, 15, 30, 90, 120, 365].map((days) => (
                 <Button
                   key={days}
                   variant={filterDays === days ? 'default' : 'outline'}
@@ -184,7 +184,7 @@ export default function DashboardPage() {
                   onClick={() => setFilterDays(days)}
                   className={filterDays === days ? 'bg-[#006437] hover:bg-[#005030]' : ''}
                 >
-                  {days === 365 ? '1 ano' : `${days} dias`}
+                  {days === 1 ? '24h' : days === 365 ? '1 ano' : `${days} dias`}
                 </Button>
               ))}
             </div>

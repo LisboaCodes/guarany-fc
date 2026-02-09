@@ -168,20 +168,53 @@ export async function GET(request: NextRequest) {
             }
           } catch (e) {
             // If member not found, use default
+            description = 'Novo sócio cadastrado'
           }
         } else {
-          // Map other actions
-          const actionMap: Record<string, string> = {
-            'UPDATE_Member': 'Sócio atualizado',
-            'DELETE_Member': 'Sócio desativado',
-            'CREATE_Payment': 'Pagamento registrado',
-            'UPDATE_Payment': 'Pagamento atualizado',
-            'CANCEL_Payment': 'Pagamento cancelado',
-            'UPDATE_SystemSettings': 'Configurações atualizadas'
+          // Map all actions to Portuguese
+          const actionMap: Record<string, Record<string, string>> = {
+            'CREATE': {
+              'Member': 'Novo sócio cadastrado',
+              'Payment': 'Novo pagamento registrado',
+              'User': 'Novo usuário criado'
+            },
+            'UPDATE': {
+              'Member': 'Sócio atualizado',
+              'Payment': 'Pagamento atualizado',
+              'User': 'Usuário atualizado',
+              'SystemSettings': 'Configurações atualizadas'
+            },
+            'DELETE': {
+              'Member': 'Sócio removido',
+              'Payment': 'Pagamento excluído',
+              'User': 'Usuário removido'
+            },
+            'UPDATE_PASSWORD': {
+              'User': 'Senha alterada'
+            }
           }
 
-          const key = `${log.action}_${log.entityType}`
-          description = actionMap[key] || `${log.action} em ${log.entityType}`
+          // Get description from map
+          if (actionMap[log.action] && actionMap[log.action][log.entityType]) {
+            description = actionMap[log.action][log.entityType]
+          } else {
+            // Fallback to generic description
+            const actionTranslation: Record<string, string> = {
+              'CREATE': 'Criado',
+              'UPDATE': 'Atualizado',
+              'DELETE': 'Excluído',
+              'CANCEL': 'Cancelado'
+            }
+            const entityTranslation: Record<string, string> = {
+              'Member': 'Sócio',
+              'Payment': 'Pagamento',
+              'User': 'Usuário',
+              'SystemSettings': 'Configurações'
+            }
+            const actionText = actionTranslation[log.action] || log.action
+            const entityText = entityTranslation[log.entityType] || log.entityType
+            description = `${entityText} ${actionText.toLowerCase()}`
+          }
         }
 
         return {
