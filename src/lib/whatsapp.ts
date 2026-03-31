@@ -140,7 +140,6 @@ export async function checkAndSendBirthdayMessages() {
     const members = await prisma.member.findMany({
       where: {
         active: true,
-        birthDate: { not: null }
       }
     })
 
