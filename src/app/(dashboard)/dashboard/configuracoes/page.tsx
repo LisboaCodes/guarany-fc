@@ -64,12 +64,40 @@ export default function ConfiguracoesPage() {
 
   const modules: Module[] = [
     {
+      id: 'hosting',
+      name: 'Hospedagem do Sistema',
+      description: 'Hospedagem completa do sistema em servidor dedicado com alta disponibilidade',
+      price: 39.90,
+      icon: Settings,
+      status: 'active',
+      features: [
+        'Servidor dedicado',
+        'Backup automático diário',
+        'SSL/HTTPS incluso',
+        'Suporte técnico'
+      ]
+    },
+    {
+      id: 'subdomain',
+      name: 'Subdomínio Personalizado',
+      description: 'Subdomínio exclusivo para acesso ao sistema (ex: guarany.creativenext.com.br)',
+      price: 9.90,
+      icon: Package,
+      status: 'active',
+      features: [
+        'Subdomínio exclusivo',
+        'Certificado SSL automático',
+        'DNS gerenciado',
+        'Redirecionamento automático'
+      ]
+    },
+    {
       id: 'whatsapp',
       name: 'WhatsApp (Evolution API)',
       description: 'Integração completa com WhatsApp para envio automático de notificações',
       price: 29.90,
       icon: MessageSquare,
-      status: 'available',
+      status: 'active',
       features: [
         'Envio automático de mensagens',
         'Templates personalizáveis',
@@ -83,7 +111,7 @@ export default function ConfiguracoesPage() {
       description: 'Envio automático de mensagens de parabéns via WhatsApp',
       price: 19.90,
       icon: Calendar,
-      status: 'available',
+      status: 'active',
       features: [
         'Detecção automática de aniversariantes',
         'Mensagens personalizadas',
@@ -97,7 +125,7 @@ export default function ConfiguracoesPage() {
       description: 'Notificações automáticas de vencimento e atraso',
       price: 19.90,
       icon: DollarSign,
-      status: 'available',
+      status: 'active',
       features: [
         'Lembretes X dias antes do vencimento',
         'Notificações de atraso',

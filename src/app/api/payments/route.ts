@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { sendPaymentNotification } from '@/lib/whatsapp'
 
 // GET /api/payments - List payments with filtering
 export async function GET(request: NextRequest) {
@@ -148,6 +149,25 @@ export async function POST(request: NextRequest) {
         userId: session.user.id
       }
     })
+
+    // Send WhatsApp notification
+    try {
+      const member = await prisma.member.findUnique({
+        where: { id: memberId },
+        select: { id: true, name: true, phone: true }
+      })
+      if (member?.phone) {
+        sendPaymentNotification(member, {
+          amount: parseFloat(amount),
+          referenceMonth: parseInt(referenceMonth),
+          referenceYear: parseInt(referenceYear),
+          status: status || 'PENDING',
+          dueDate: new Date(dueDate),
+        }).catch(err => console.error('[WhatsApp] Erro na notificação:', err))
+      }
+    } catch (whatsappError) {
+      console.error('[WhatsApp] Erro ao enviar notificação:', whatsappError)
+    }
 
     return NextResponse.json(payment, { status: 201 })
   } catch (error: any) {
