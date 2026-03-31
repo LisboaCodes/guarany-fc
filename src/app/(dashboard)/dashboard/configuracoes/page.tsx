@@ -498,47 +498,61 @@ export default function ConfiguracoesPage() {
                     </ul>
                   </div>
 
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button
-                        className="w-full"
-                        variant={module.status === 'active' ? 'outline' : 'default'}
-                        disabled={module.status === 'coming_soon'}
-                      >
-                        {module.status === 'active' ? 'Configurar' : module.status === 'coming_soon' ? 'Em Breve' : 'Adquirir Módulo'}
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Adquirir {module.name}</DialogTitle>
-                        <DialogDescription>
-                          Entre em contato para adicionar este módulo ao seu sistema
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="space-y-4">
-                        <div className="p-4 bg-muted rounded-lg">
-                          <p className="text-sm font-semibold">Investimento único:</p>
-                          <p className="text-3xl font-bold text-[#006437]">
-                            {formatCurrency(module.price)}
+                  {module.status === 'active' ? (
+                    <Button
+                      className="w-full bg-emerald-600 hover:bg-emerald-600 text-white cursor-default pointer-events-none"
+                      disabled={false}
+                    >
+                      <CheckCircle2 className="mr-2 h-4 w-4" />
+                      Ativo
+                    </Button>
+                  ) : module.status === 'coming_soon' ? (
+                    <Button
+                      className="w-full"
+                      variant="default"
+                      disabled={true}
+                    >
+                      Em Breve
+                    </Button>
+                  ) : (
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button className="w-full">
+                          Adquirir Módulo
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Adquirir {module.name}</DialogTitle>
+                          <DialogDescription>
+                            Entre em contato para adicionar este módulo ao seu sistema
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          <div className="p-4 bg-muted rounded-lg">
+                            <p className="text-sm font-semibold">Investimento único:</p>
+                            <p className="text-3xl font-bold text-[#006437]">
+                              {formatCurrency(module.price)}
+                            </p>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            Para implementar este módulo, entre em contato pelo WhatsApp:
                           </p>
+                          <div className="space-y-2">
+                            <Button
+                              className="w-full bg-[#25D366] hover:bg-[#1fb355] text-white"
+                              onClick={() => {
+                                const message = `Olá! Gostaria de adquirir o módulo *${module.name}* (${formatCurrency(module.price)}) para o sistema AA Guarany.`
+                                window.open(`https://wa.me/557999062129?text=${encodeURIComponent(message)}`, '_blank')
+                              }}
+                            >
+                              Solicitar via WhatsApp
+                            </Button>
+                          </div>
                         </div>
-                        <p className="text-sm text-muted-foreground">
-                          Para implementar este módulo, entre em contato pelo WhatsApp:
-                        </p>
-                        <div className="space-y-2">
-                          <Button
-                            className="w-full bg-[#25D366] hover:bg-[#1fb355] text-white"
-                            onClick={() => {
-                              const message = `Olá! Gostaria de adquirir o módulo *${module.name}* (${formatCurrency(module.price)}) para o sistema AA Guarany.`
-                              window.open(`https://wa.me/557999062129?text=${encodeURIComponent(message)}`, '_blank')
-                            }}
-                          >
-                            📱 Solicitar via WhatsApp
-                          </Button>
-                        </div>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+                      </DialogContent>
+                    </Dialog>
+                  )}
                 </CardContent>
               </Card>
             )

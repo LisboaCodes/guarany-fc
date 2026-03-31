@@ -288,16 +288,16 @@ export default function DashboardPage() {
               </Badge>
             </div>
 
-            <div className="flex items-center justify-between p-4 rounded-lg border bg-slate-600">
+            <div className="flex items-center justify-between p-4 rounded-lg border bg-emerald-600">
               <div className="flex items-center space-x-3">
-                <div className="h-2 w-2 rounded-full bg-white/60"></div>
+                <div className="h-2 w-2 rounded-full bg-white animate-pulse"></div>
                 <div>
                   <p className="text-sm font-medium text-white">API WhatsApp</p>
-                  <p className="text-xs text-slate-100">Aguardando config</p>
+                  <p className="text-xs text-emerald-100">Conectado</p>
                 </div>
               </div>
-              <Badge className="bg-white text-slate-600 hover:bg-white/90">
-                Pendente
+              <Badge className="bg-white text-emerald-600 hover:bg-white/90">
+                Ativo
               </Badge>
             </div>
           </div>
