@@ -20,6 +20,7 @@ import {
   BarChart3,
   FileText,
   UserCog,
+  MessageSquare,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
@@ -41,6 +42,7 @@ const navigation = [
   { name: 'Socios', href: '/dashboard/socios', icon: Users },
   { name: 'Pagamentos', href: '/dashboard/pagamentos', icon: DollarSign },
   { name: 'Score', href: '/dashboard/score', icon: BarChart3 },
+  { name: 'WhatsApp', href: '/dashboard/whatsapp', icon: MessageSquare },
   { name: 'Logs', href: '/dashboard/logs', icon: FileText, adminOnly: true },
   { name: 'Usuarios', href: '/dashboard/usuarios', icon: UserCog, adminOnly: true },
   { name: 'Config', href: '/dashboard/configuracoes', icon: Settings },
