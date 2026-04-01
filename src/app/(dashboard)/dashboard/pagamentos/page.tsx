@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -35,24 +35,34 @@ import {
   Loader2,
   AlertCircle,
   CheckCircle,
-  XCircle
+  XCircle,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Ban,
+  Users,
+  TrendingUp,
+  TrendingDown,
+  Calendar,
 } from 'lucide-react'
 
-interface Payment {
-  id: string
-  amount: number
-  method: string
-  status: string
+interface GridEntry {
+  id: string | null
+  memberId: string
+  memberName: string
+  memberCpf: string
+  memberPhone: string
   referenceMonth: number
   referenceYear: number
+  amount: number
+  method: string | null
+  status: string
   dueDate: string
-  paidAt?: string
-  member: {
-    id: string
-    name: string
-    cpf: string
-  }
-  registeredBy: { name: string }
+  paidAt: string | null
+  notes: string | null
+  registeredBy: string | null
+  isVirtual: boolean
 }
 
 interface Member {
@@ -65,13 +75,16 @@ export default function PagamentosPage() {
   const searchParams = useSearchParams()
   const preselectedMemberId = searchParams.get('member')
 
-  const [payments, setPayments] = useState<Payment[]>([])
+  const [gridData, setGridData] = useState<GridEntry[]>([])
   const [members, setMembers] = useState<Member[]>([])
   const [loading, setLoading] = useState(true)
   const [showDialog, setShowDialog] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
+  const [membershipValue, setMembershipValue] = useState(50)
 
   const currentMonth = new Date().getMonth() + 1
   const currentYear = new Date().getFullYear()
@@ -89,24 +102,21 @@ export default function PagamentosPage() {
   })
 
   useEffect(() => {
-    fetchPayments()
+    fetchGrid()
     fetchMembers()
-  }, [statusFilter])
+  }, [selectedYear])
 
-  const fetchPayments = async () => {
+  const fetchGrid = async () => {
     setLoading(true)
     try {
-      const params = new URLSearchParams({ limit: '50' })
-      if (statusFilter !== 'all') params.append('status', statusFilter)
-
-      const res = await fetch(`/api/payments?${params}`)
+      const res = await fetch(`/api/payments/grid?year=${selectedYear}`)
       const data = await res.json()
-
       if (res.ok) {
-        setPayments(data.payments)
+        setGridData(data.grid)
+        setMembershipValue(data.membershipValue)
       }
     } catch (error) {
-      console.error('Error fetching payments:', error)
+      console.error('Error fetching grid:', error)
     } finally {
       setLoading(false)
     }
@@ -123,6 +133,41 @@ export default function PagamentosPage() {
       console.error('Error fetching members:', error)
     }
   }
+
+  // Filtered data
+  const filteredData = useMemo(() => {
+    let data = gridData
+
+    if (statusFilter !== 'all') {
+      data = data.filter(entry => entry.status === statusFilter)
+    }
+
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase()
+      data = data.filter(entry =>
+        entry.memberName.toLowerCase().includes(term) ||
+        entry.memberCpf.includes(searchTerm.replace(/\D/g, ''))
+      )
+    }
+
+    return data
+  }, [gridData, statusFilter, searchTerm])
+
+  // Stats
+  const stats = useMemo(() => {
+    const paid = gridData.filter(e => e.status === 'PAID').length
+    const pending = gridData.filter(e => e.status === 'PENDING').length
+    const overdue = gridData.filter(e => e.status === 'OVERDUE').length
+    const cancelled = gridData.filter(e => e.status === 'CANCELLED').length
+    const totalPaid = gridData
+      .filter(e => e.status === 'PAID')
+      .reduce((sum, e) => sum + e.amount, 0)
+    const totalPending = gridData
+      .filter(e => e.status === 'PENDING' || e.status === 'OVERDUE')
+      .reduce((sum, e) => sum + e.amount, 0)
+
+    return { paid, pending, overdue, cancelled, totalPaid, totalPending }
+  }, [gridData])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -143,9 +188,8 @@ export default function PagamentosPage() {
       }
 
       setShowDialog(false)
-      fetchPayments()
+      fetchGrid()
 
-      // Reset form
       setFormData({
         ...formData,
         memberId: '',
@@ -170,11 +214,27 @@ export default function PagamentosPage() {
       })
 
       if (res.ok) {
-        fetchPayments()
+        fetchGrid()
       }
     } catch (error) {
       console.error('Error marking payment as paid:', error)
     }
+  }
+
+  // Quick register for virtual entries (no payment record yet)
+  const handleQuickRegister = (entry: GridEntry) => {
+    setFormData({
+      memberId: entry.memberId,
+      amount: entry.amount.toString(),
+      method: 'PIX',
+      status: 'PAID',
+      referenceMonth: entry.referenceMonth.toString(),
+      referenceYear: entry.referenceYear.toString(),
+      dueDate: new Date(entry.dueDate).toISOString().split('T')[0],
+      paidAt: new Date().toISOString().split('T')[0],
+      notes: ''
+    })
+    setShowDialog(true)
   }
 
   const formatCurrency = (value: number) => {
@@ -193,30 +253,46 @@ export default function PagamentosPage() {
   }
 
   const getStatusBadge = (status: string) => {
-    const variants: Record<string, { label: string; className: string }> = {
-      PAID: { label: 'Pago', className: 'bg-emerald-600 text-white' },
-      PENDING: { label: 'Pendente', className: 'bg-amber-500 text-white' },
-      OVERDUE: { label: 'Atrasado', className: 'bg-red-600 text-white' },
-      CANCELLED: { label: 'Cancelado', className: 'bg-slate-400 text-white' }
+    const variants: Record<string, { label: string; className: string; icon: any }> = {
+      PAID: { label: 'Pago', className: 'bg-emerald-600 text-white', icon: CheckCircle },
+      PENDING: { label: 'Pendente', className: 'bg-amber-500 text-white', icon: Clock },
+      OVERDUE: { label: 'Atrasado', className: 'bg-red-600 text-white', icon: AlertCircle },
+      CANCELLED: { label: 'Cancelado', className: 'bg-slate-400 text-white', icon: Ban }
     }
     const config = variants[status] || variants.PENDING
-    return <Badge className={config.className}>{config.label}</Badge>
+    const Icon = config.icon
+    return (
+      <Badge className={config.className}>
+        <Icon className="mr-1 h-3 w-3" />
+        {config.label}
+      </Badge>
+    )
   }
 
-  const getMethodLabel = (method: string) => {
+  const getMethodLabel = (method: string | null) => {
+    if (!method) return '-'
     const methods: Record<string, string> = {
       PIX: 'PIX',
       CASH: 'Dinheiro',
-      CARD: 'Cartão',
+      CARD: 'Cartao',
       BOLETO: 'Boleto'
     }
     return methods[method] || method
   }
 
   const months = [
-    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+    'Janeiro', 'Fevereiro', 'Marco', 'Abril', 'Maio', 'Junho',
     'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
   ]
+
+  const getRowBg = (status: string) => {
+    switch (status) {
+      case 'PAID': return 'bg-emerald-50/50'
+      case 'OVERDUE': return 'bg-red-50/50'
+      case 'CANCELLED': return 'bg-slate-50/50'
+      default: return ''
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -225,11 +301,24 @@ export default function PagamentosPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Pagamentos</h1>
           <p className="text-muted-foreground mt-1">
-            Gerencie os pagamentos dos sócios
+            Controle completo de mensalidades dos socios
           </p>
         </div>
         <Button
-          onClick={() => setShowDialog(true)}
+          onClick={() => {
+            setFormData({
+              memberId: '',
+              amount: membershipValue.toString(),
+              method: 'PIX',
+              status: 'PAID',
+              referenceMonth: currentMonth.toString(),
+              referenceYear: currentYear.toString(),
+              dueDate: new Date(currentYear, currentMonth - 1, 10).toISOString().split('T')[0],
+              paidAt: new Date().toISOString().split('T')[0],
+              notes: ''
+            })
+            setShowDialog(true)
+          }}
           className="bg-gradient-to-r from-[#006437] to-[#0A6938] hover:from-[#005030] hover:to-[#006437]"
         >
           <Plus className="mr-2 h-4 w-4" />
@@ -237,40 +326,153 @@ export default function PagamentosPage() {
         </Button>
       </div>
 
+      {/* Stats Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Pagos</p>
+                <p className="text-2xl font-bold text-emerald-600">{stats.paid}</p>
+                <p className="text-xs text-muted-foreground mt-1">{formatCurrency(stats.totalPaid)}</p>
+              </div>
+              <div className="h-12 w-12 rounded-full bg-emerald-100 flex items-center justify-center">
+                <TrendingUp className="h-6 w-6 text-emerald-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Pendentes</p>
+                <p className="text-2xl font-bold text-amber-500">{stats.pending}</p>
+                <p className="text-xs text-muted-foreground mt-1">Aguardando pagamento</p>
+              </div>
+              <div className="h-12 w-12 rounded-full bg-amber-100 flex items-center justify-center">
+                <Clock className="h-6 w-6 text-amber-500" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Atrasados</p>
+                <p className="text-2xl font-bold text-red-600">{stats.overdue}</p>
+                <p className="text-xs text-muted-foreground mt-1">{formatCurrency(stats.totalPending)}</p>
+              </div>
+              <div className="h-12 w-12 rounded-full bg-red-100 flex items-center justify-center">
+                <TrendingDown className="h-6 w-6 text-red-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Cancelados</p>
+                <p className="text-2xl font-bold text-slate-400">{stats.cancelled}</p>
+                <p className="text-xs text-muted-foreground mt-1">{selectedYear}</p>
+              </div>
+              <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center">
+                <Ban className="h-6 w-6 text-slate-400" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Filters */}
       <Card>
-        <CardHeader>
-          <CardTitle>Filtros</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-2">
-            <Button
-              variant={statusFilter === 'all' ? 'default' : 'outline'}
-              onClick={() => setStatusFilter('all')}
-            >
-              Todos
-            </Button>
-            <Button
-              variant={statusFilter === 'PAID' ? 'default' : 'outline'}
-              onClick={() => setStatusFilter('PAID')}
-            >
-              <CheckCircle className="mr-2 h-4 w-4" />
-              Pagos
-            </Button>
-            <Button
-              variant={statusFilter === 'PENDING' ? 'default' : 'outline'}
-              onClick={() => setStatusFilter('PENDING')}
-            >
-              <AlertCircle className="mr-2 h-4 w-4" />
-              Pendentes
-            </Button>
-            <Button
-              variant={statusFilter === 'OVERDUE' ? 'default' : 'outline'}
-              onClick={() => setStatusFilter('OVERDUE')}
-            >
-              <XCircle className="mr-2 h-4 w-4" />
-              Atrasados
-            </Button>
+        <CardContent className="pt-6">
+          <div className="flex flex-col md:flex-row gap-4">
+            {/* Year Selector */}
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setSelectedYear(y => y - 1)}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <div className="flex items-center gap-2 px-4 py-2 bg-[#006437] text-white rounded-md font-bold min-w-[120px] justify-center">
+                <Calendar className="h-4 w-4" />
+                {selectedYear}
+              </div>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setSelectedYear(y => y + 1)}
+                disabled={selectedYear >= currentYear}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Search */}
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por nome ou CPF..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+
+            {/* Status Filters */}
+            <div className="flex gap-2 flex-wrap">
+              <Button
+                size="sm"
+                variant={statusFilter === 'all' ? 'default' : 'outline'}
+                onClick={() => setStatusFilter('all')}
+              >
+                Todos
+              </Button>
+              <Button
+                size="sm"
+                variant={statusFilter === 'PAID' ? 'default' : 'outline'}
+                onClick={() => setStatusFilter('PAID')}
+                className={statusFilter === 'PAID' ? 'bg-emerald-600 hover:bg-emerald-700' : ''}
+              >
+                <CheckCircle className="mr-1 h-3 w-3" />
+                Pagos
+              </Button>
+              <Button
+                size="sm"
+                variant={statusFilter === 'PENDING' ? 'default' : 'outline'}
+                onClick={() => setStatusFilter('PENDING')}
+                className={statusFilter === 'PENDING' ? 'bg-amber-500 hover:bg-amber-600' : ''}
+              >
+                <Clock className="mr-1 h-3 w-3" />
+                Pendentes
+              </Button>
+              <Button
+                size="sm"
+                variant={statusFilter === 'OVERDUE' ? 'default' : 'outline'}
+                onClick={() => setStatusFilter('OVERDUE')}
+                className={statusFilter === 'OVERDUE' ? 'bg-red-600 hover:bg-red-700' : ''}
+              >
+                <AlertCircle className="mr-1 h-3 w-3" />
+                Atrasados
+              </Button>
+              <Button
+                size="sm"
+                variant={statusFilter === 'CANCELLED' ? 'default' : 'outline'}
+                onClick={() => setStatusFilter('CANCELLED')}
+                className={statusFilter === 'CANCELLED' ? 'bg-slate-500 hover:bg-slate-600' : ''}
+              >
+                <Ban className="mr-1 h-3 w-3" />
+                Cancelados
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -278,62 +480,90 @@ export default function PagamentosPage() {
       {/* Payments Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Lista de Pagamentos</CardTitle>
-          <CardDescription>
-            {loading ? 'Carregando...' : `${payments.length} pagamentos encontrados`}
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Mensalidades {selectedYear}</CardTitle>
+              <CardDescription>
+                {loading ? 'Carregando...' : `${filteredData.length} registro(s) encontrado(s)`}
+              </CardDescription>
+            </div>
+            <Badge variant="outline" className="text-[#006437] border-[#006437]">
+              <Users className="mr-1 h-3 w-3" />
+              {new Set(gridData.map(e => e.memberId)).size} socio(s)
+            </Badge>
+          </div>
         </CardHeader>
         <CardContent>
           {loading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-8 w-8 animate-spin text-[#006437]" />
             </div>
-          ) : payments.length === 0 ? (
+          ) : filteredData.length === 0 ? (
             <div className="text-center py-8">
               <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">Nenhum pagamento encontrado</p>
+              <p className="text-muted-foreground">Nenhum registro encontrado</p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Sócio</TableHead>
-                  <TableHead>CPF</TableHead>
-                  <TableHead>Referência</TableHead>
-                  <TableHead>Valor</TableHead>
-                  <TableHead>Método</TableHead>
-                  <TableHead>Vencimento</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {payments.map((payment) => (
-                  <TableRow key={payment.id}>
-                    <TableCell className="font-medium">{payment.member.name}</TableCell>
-                    <TableCell>{formatCPF(payment.member.cpf)}</TableCell>
-                    <TableCell>
-                      {months[payment.referenceMonth - 1]} {payment.referenceYear}
-                    </TableCell>
-                    <TableCell>{formatCurrency(Number(payment.amount))}</TableCell>
-                    <TableCell>{getMethodLabel(payment.method)}</TableCell>
-                    <TableCell>{formatDate(payment.dueDate)}</TableCell>
-                    <TableCell>{getStatusBadge(payment.status)}</TableCell>
-                    <TableCell>
-                      {payment.status === 'PENDING' && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleMarkAsPaid(payment.id)}
-                        >
-                          Marcar como Pago
-                        </Button>
-                      )}
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Socio</TableHead>
+                    <TableHead>CPF</TableHead>
+                    <TableHead>Referencia</TableHead>
+                    <TableHead>Valor</TableHead>
+                    <TableHead>Metodo</TableHead>
+                    <TableHead>Vencimento</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Acoes</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredData.map((entry, index) => (
+                    <TableRow key={entry.id || `${entry.memberId}-${entry.referenceMonth}`} className={getRowBg(entry.status)}>
+                      <TableCell className="font-medium">{entry.memberName}</TableCell>
+                      <TableCell className="text-sm">{formatCPF(entry.memberCpf)}</TableCell>
+                      <TableCell>
+                        <span className="font-medium">
+                          {months[entry.referenceMonth - 1]} {entry.referenceYear}
+                        </span>
+                      </TableCell>
+                      <TableCell className="font-medium">{formatCurrency(entry.amount)}</TableCell>
+                      <TableCell>{getMethodLabel(entry.method)}</TableCell>
+                      <TableCell className="text-sm">{formatDate(entry.dueDate)}</TableCell>
+                      <TableCell>{getStatusBadge(entry.status)}</TableCell>
+                      <TableCell>
+                        {entry.isVirtual ? (
+                          <Button
+                            size="sm"
+                            onClick={() => handleQuickRegister(entry)}
+                            className="bg-[#006437] hover:bg-[#005030] text-white text-xs"
+                          >
+                            <DollarSign className="mr-1 h-3 w-3" />
+                            Registrar
+                          </Button>
+                        ) : entry.status === 'PENDING' || entry.status === 'OVERDUE' ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleMarkAsPaid(entry.id!)}
+                            className="text-emerald-600 border-emerald-600 hover:bg-emerald-50 text-xs"
+                          >
+                            <CheckCircle className="mr-1 h-3 w-3" />
+                            Marcar Pago
+                          </Button>
+                        ) : entry.status === 'PAID' ? (
+                          <span className="text-xs text-emerald-600 font-medium flex items-center gap-1">
+                            <CheckCircle className="h-3 w-3" />
+                            {entry.paidAt ? formatDate(entry.paidAt) : 'Confirmado'}
+                          </span>
+                        ) : null}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -358,14 +588,14 @@ export default function PagamentosPage() {
             <div className="space-y-4">
               {/* Member Select */}
               <div className="space-y-2">
-                <label className="text-sm font-medium">Sócio *</label>
+                <label className="text-sm font-medium">Socio *</label>
                 <Select
                   value={formData.memberId}
                   onValueChange={(value) => setFormData({ ...formData, memberId: value })}
                   required
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione um sócio" />
+                    <SelectValue placeholder="Selecione um socio" />
                   </SelectTrigger>
                   <SelectContent>
                     {members.map((member) => (
@@ -380,7 +610,7 @@ export default function PagamentosPage() {
               <div className="grid gap-4 md:grid-cols-2">
                 {/* Reference Month */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Mês de Referência *</label>
+                  <label className="text-sm font-medium">Mes de Referencia *</label>
                   <Select
                     value={formData.referenceMonth}
                     onValueChange={(value) => setFormData({ ...formData, referenceMonth: value })}
@@ -436,7 +666,7 @@ export default function PagamentosPage() {
 
                 {/* Method */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Método *</label>
+                  <label className="text-sm font-medium">Metodo *</label>
                   <Select
                     value={formData.method}
                     onValueChange={(value) => setFormData({ ...formData, method: value })}
@@ -448,7 +678,7 @@ export default function PagamentosPage() {
                     <SelectContent>
                       <SelectItem value="PIX">PIX</SelectItem>
                       <SelectItem value="CASH">Dinheiro</SelectItem>
-                      <SelectItem value="CARD">Cartão</SelectItem>
+                      <SelectItem value="CARD">Cartao</SelectItem>
                       <SelectItem value="BOLETO">Boleto</SelectItem>
                     </SelectContent>
                   </Select>
@@ -500,11 +730,11 @@ export default function PagamentosPage() {
 
               {/* Notes */}
               <div className="space-y-2">
-                <label className="text-sm font-medium">Observações</label>
+                <label className="text-sm font-medium">Observacoes</label>
                 <Input
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  placeholder="Observações adicionais"
+                  placeholder="Observacoes adicionais"
                 />
               </div>
             </div>
@@ -513,7 +743,11 @@ export default function PagamentosPage() {
               <Button type="button" variant="outline" onClick={() => setShowDialog(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" disabled={saving}>
+              <Button
+                type="submit"
+                disabled={saving}
+                className="bg-[#006437] hover:bg-[#005030]"
+              >
                 {saving ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
