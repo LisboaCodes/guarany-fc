@@ -16,7 +16,10 @@ import {
   Settings,
   Menu,
   User,
-  ChevronDown
+  ChevronDown,
+  BarChart3,
+  FileText,
+  UserCog,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
@@ -35,9 +38,12 @@ import {
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Sócios', href: '/dashboard/socios', icon: Users },
+  { name: 'Socios', href: '/dashboard/socios', icon: Users },
   { name: 'Pagamentos', href: '/dashboard/pagamentos', icon: DollarSign },
-  { name: 'Configurações', href: '/dashboard/configuracoes', icon: Settings },
+  { name: 'Score', href: '/dashboard/score', icon: BarChart3 },
+  { name: 'Logs', href: '/dashboard/logs', icon: FileText, adminOnly: true },
+  { name: 'Usuarios', href: '/dashboard/usuarios', icon: UserCog, adminOnly: true },
+  { name: 'Config', href: '/dashboard/configuracoes', icon: Settings },
 ]
 
 const userNavigation = [
@@ -96,7 +102,7 @@ export default function DashboardLayout({
               </SheetTrigger>
               <SheetContent side="left" className="w-64">
                 <div className="flex flex-col gap-4 mt-8">
-                  {navigation.map((item) => {
+                  {navigation.filter(item => !item.adminOnly || ['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)).map((item) => {
                     const Icon = item.icon
                     const isActive = pathname === item.href
                     return (
@@ -135,7 +141,7 @@ export default function DashboardLayout({
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
-            {navigation.map((item) => {
+            {navigation.filter(item => !item.adminOnly || ['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)).map((item) => {
               const Icon = item.icon
               const isActive = pathname === item.href
               return (

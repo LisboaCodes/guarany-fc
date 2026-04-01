@@ -1,4 +1,4 @@
-// Associação Atlética Guarany - Sócio Torcedor Database Schema
+// Associacao Atletica Guarany - Socio Torcedor Database Schema
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,7 +8,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Usuários do sistema (Admin/Operador)
+// Usuarios do sistema (Admin/Operador/Financeiro/Atendimento)
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -19,7 +19,7 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Relações
+  // Relacoes
   membersCreated Member[]   @relation("MemberCreatedBy")
   paymentsRegistered Payment[] @relation("PaymentRegisteredBy")
   auditLogs      AuditLog[]
@@ -30,11 +30,14 @@ model User {
 }
 
 enum UserRole {
+  SUPER_ADMIN
   ADMIN
+  FINANCIAL
+  ATTENDANT
   OPERATOR
 }
 
-// Sócios torcedores
+// Socios torcedores
 model Member {
   id        String   @id @default(cuid())
   name      String
@@ -52,7 +55,7 @@ model Member {
   createdById String
   createdBy   User   @relation("MemberCreatedBy", fields: [createdById], references: [id])
 
-  // Relações
+  // Relacoes
   payments Payment[]
   notificationLogs NotificationLog[]
 
@@ -105,7 +108,7 @@ enum PaymentStatus {
   CANCELLED
 }
 
-// Configurações do sistema
+// Configuracoes do sistema
 model SystemSettings {
   id    String @id @default("singleton")
 
@@ -120,10 +123,10 @@ model SystemSettings {
 
   // Templates de mensagens
   birthdayMessageEnabled Boolean @default(true)
-  birthdayMessageTemplate String @default("🎉 Feliz Aniversário, {name}! 🎂\nToda a família Guarany FC deseja um dia especial para você! 🟢⚪\nObrigado por fazer parte do nosso time! ⚽")
+  birthdayMessageTemplate String @default("Feliz Aniversario, {name}! Toda a familia Guarany FC deseja um dia especial para voce! Obrigado por fazer parte do nosso time!")
 
   reminderMessageEnabled Boolean @default(true)
-  reminderMessageTemplate String @default("Olá, {name}! 👋\nLembrando que o pagamento da mensalidade do Sócio Torcedor Guarany FC referente a *{month}/{year}* vence no dia *{dueDate}*.\nValor: R$ {amount}\nContamos com você! 🟢⚪⚽")
+  reminderMessageTemplate String @default("Ola, {name}! Lembrando que o pagamento da mensalidade do Socio Torcedor Guarany FC referente a {month}/{year} vence no dia {dueDate}. Valor: R$ {amount}. Contamos com voce!")
 
   reminderDaysBeforeDue Int @default(5)
 
@@ -133,7 +136,7 @@ model SystemSettings {
   @@map("system_settings")
 }
 
-// Log de notificações WhatsApp
+// Log de notificacoes WhatsApp
 model NotificationLog {
   id        String             @id @default(cuid())
   type      NotificationType
@@ -184,5 +187,6 @@ model AuditLog {
   @@index([userId])
   @@index([entityType])
   @@index([createdAt])
+  @@index([action])
   @@map("audit_logs")
 }

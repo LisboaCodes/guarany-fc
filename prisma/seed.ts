@@ -30,7 +30,7 @@ async function main() {
       email: 'admin@guarany.com',
       name: 'Administrador',
       password: hashedPassword,
-      role: 'ADMIN',
+      role: 'SUPER_ADMIN',
       active: true,
     },
   })

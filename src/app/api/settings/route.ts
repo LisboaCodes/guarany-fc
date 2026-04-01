@@ -2,9 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { ensureDbSchema } from '@/lib/db-migrate'
+
+let migrationRan = false
 
 // GET - Buscar configurações do sistema
 export async function GET(request: NextRequest) {
+  if (!migrationRan) {
+    await ensureDbSchema()
+    migrationRan = true
+  }
   try {
     const session = await getServerSession(authOptions)
 
