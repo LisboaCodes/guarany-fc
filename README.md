@@ -1,334 +1,418 @@
-# 🟢⚪ Associação Atlética Guarany - Sistema de Sócio Torcedor
+# AA Guarany - Sistema de Socio Torcedor
 
-Sistema completo de gerenciamento de sócios torcedores para a Associação Atlética Guarany.
+Sistema completo de gerenciamento de socios torcedores para a Associacao Atletica Guarany, com controle financeiro, notificacoes automaticas via WhatsApp, score de inadimplencia e gestao de usuarios com 5 niveis de permissao.
 
 ![Next.js](https://img.shields.io/badge/Next.js-16.1.6-black)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.9.3-blue)
 ![Prisma](https://img.shields.io/badge/Prisma-5.22.0-green)
-![shadcn/ui](https://img.shields.io/badge/shadcn/ui-latest-purple)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue)
+![Tailwind](https://img.shields.io/badge/Tailwind-4.1-cyan)
 
-## 🎯 Funcionalidades
+**URL**: https://guarany.creativenext.com.br
 
-### ✅ Sistema Completo Implementado
+---
 
-#### 🎨 Interface Moderna
-- Design **responsivo** (mobile, tablet, desktop)
-- Tema **Palmeiras** (#006437, #FFD700)
-- Componentes **shadcn/ui** profissionais
-- **Navegação** intuitiva com menu responsivo
-- **Loading states** e animações suaves
+## Stack Tecnologica
 
-#### 👥 Gerenciamento de Sócios
-- **Cadastro completo** com validação de CPF
-- **Busca e filtros** por nome, CPF, telefone, status
-- **Paginação** automática
-- **Visualização detalhada** com histórico de pagamentos
-- **Edição inline** de dados
-- **Ativação/Desativação** de sócios
-- **Formatação automática** de CPF e telefone
+| Tecnologia | Versao | Uso |
+|---|---|---|
+| Next.js | 16.1.6 | Framework (App Router) |
+| React | 19.2.4 | UI |
+| TypeScript | 5.9.3 | Tipagem |
+| Prisma | 5.22.0 | ORM + Migrations |
+| PostgreSQL | 16 | Banco de dados |
+| NextAuth.js | 4.24.13 | Autenticacao (JWT) |
+| Tailwind CSS | 4.1.18 | Estilizacao |
+| shadcn/ui | latest | Componentes UI (Radix) |
+| Lucide React | 0.563.0 | Icones |
+| Recharts | 2.15.4 | Graficos (instalado) |
+| Evolution API | - | WhatsApp integration |
+| Coolify | v4 | Deploy (Docker/Nixpacks) |
+| Traefik | - | Reverse proxy + SSL |
 
-#### 💰 Sistema de Pagamentos
-- **Registro de pagamentos** mensais
-- **Seleção de sócio** com busca
-- **Múltiplos métodos**: PIX, Dinheiro, Cartão, Boleto
-- **Controle de status**: Pago, Pendente, Atrasado, Cancelado
-- **Filtros por status** e período
-- **Histórico completo** por sócio
-- **Marca como pago** com um clique
-- **Validação** de duplicados (mesmo mês/ano)
+---
 
-#### 📊 Dashboard
-- **Cards de estatísticas** com indicadores
-- **Atividade recente** do sistema
-- **Status em tempo real** (Autenticação, BD, WhatsApp)
-- **Ações rápidas** para funcionalidades principais
+## Funcionalidades Implementadas
 
-#### 🔐 Segurança
-- Autenticação com **NextAuth.js**
-- Senhas com **bcrypt**
-- **Audit logs** automáticos para todas as ações
-- **Validações** frontend e backend
-- **Roles**: ADMIN e OPERATOR
+### 1. Dashboard (`/dashboard`)
+- 4 cards KPI com indicadores de tendencia (socios ativos, receita mensal, taxa pagamento, atrasados)
+- Feed de atividade recente com filtro por periodo (24h / 7d / 15d / 30d / 90d / 120d / 1 ano)
+- Acoes rapidas (novo socio, registrar pagamento, ver todos)
+- Status do sistema (Auth, Database, WhatsApp)
 
-## 🚀 Stack Tecnológica
+### 2. Socios (`/dashboard/socios`)
+- Listagem paginada (10/pagina) com busca por nome, CPF, telefone
+- Filtros: Todos / Ativos / Inativos
+- Cadastro completo (`/dashboard/socios/novo`): nome, CPF (com mascara), data nascimento, telefone, email, endereco
+- Detalhes do socio (`/dashboard/socios/[id]`): visualizar/editar dados, historico de pagamentos, ativar/desativar
+- Edicao inline de pagamentos na pagina do socio
+- Validacao de CPF unico no backend
 
-- **Framework**: Next.js 16.1.6 (App Router)
-- **Linguagem**: TypeScript
-- **ORM**: Prisma 5.22.0
-- **Banco de Dados**: PostgreSQL 16
-- **UI Framework**: shadcn/ui
-- **Styling**: Tailwind CSS v4
-- **Autenticação**: NextAuth.js
-- **Ícones**: Lucide React
-- **Deploy**: Coolify (Docker)
+### 3. Pagamentos (`/dashboard/pagamentos`)
+- Grade completa mes a mes com entradas virtuais para meses sem registro
+- 4 cards de resumo: Pagos (total R$), Pendentes, Atrasados, Cancelados
+- Navegacao por ano (setas esquerda/direita)
+- Busca por nome ou CPF + filtro por status
+- Botao "Registrar" para entradas virtuais (pre-preenche formulario)
+- Botao "Marcar Pago" para pendentes/atrasados (1 clique)
+- Dialog de registro: socio, mes/ano, valor, metodo (PIX/Dinheiro/Cartao/Boleto), status, vencimento, data pagamento, observacoes
+- Validacao de duplicidade (mesmo socio + mes + ano)
+- Notificacao automatica via WhatsApp ao registrar pagamento
 
-## 📦 Instalação Local
+### 4. Score de Inadimplencia (`/dashboard/score`)
+- Calculo automatico de score 0-100 para cada socio ativo
+- Formula: inicia em 100, -15 por atrasado, -20 por faltante, -5 por pendente, +2 por pago (cap 0-100)
+- Classificacoes: Bom Pagador (70+), Risco Medio (40-69), Alto Risco (0-39)
+- 4 cards de resumo: Score Medio, Bons Pagadores, Risco Medio, Alto Risco
+- Tabela com: score colorido, classificacao, pagos, atrasados, pendentes, faltantes, pontualidade %, sequencia de pagamentos
+- Busca e filtro por nivel de risco
 
-```bash
-# Clonar o repositório
-git clone https://github.com/LisboaCodes/guarany-fc.git
-cd guarany-fc
+### 5. WhatsApp (`/dashboard/whatsapp`)
+- Integracao com Evolution API para conexao direta pelo sistema
+- Botao "Gerar QR Code" que busca QR da Evolution API
+- Exibe QR Code como imagem base64 na tela
+- Polling automatico a cada 3 segundos para detectar conexao
+- Auto-criacao de instancia se nao existir (POST /instance/create)
+- Botao de desconectar com log de auditoria
+- Card de status (conectado/desconectado) com badge
+- Instrucoes passo a passo para o usuario
+- Envio automatico: notificacoes de pagamento, aniversario, lembretes, avisos de atraso
 
-# Instalar dependências
-npm install
+### 6. Logs de Auditoria (`/dashboard/logs`) - Admin only
+- Registro automatico de todas as acoes do sistema
+- Tabela paginada (30/pagina): data/hora, usuario, cargo, acao, entidade, ID
+- Filtro por tipo de entidade (Payment, Member, User, SystemSettings)
+- Dialog de detalhes com JSON completo das alteracoes (antes/depois)
+- Somente ADMIN e SUPER_ADMIN tem acesso
 
-# Configurar .env.local
-cp .env.example .env.local
-# Edite .env.local com suas configurações
+### 7. Gestao de Usuarios (`/dashboard/usuarios`) - Admin only
+- Listagem de todos os usuarios com contadores de atividade
+- Legenda com descricao dos 5 cargos
+- Criar usuario: nome, email, senha, cargo
+- Editar usuario: alterar dados, cargo, senha (opcional)
+- Ativar/desativar usuario (nao pode desativar a si mesmo)
+- Hierarquia de cargos: so SUPER_ADMIN cria ADMIN ou SUPER_ADMIN
+- Tabela: nome, email, cargo (badge colorido), status, socios criados, pagamentos, acoes, data criacao
 
-# Aplicar migrações
-npx prisma migrate dev
+### 8. Configuracoes (`/dashboard/configuracoes`)
+- **Configuracoes Financeiras**: editar valor mensalidade (R$) e dia de vencimento (1-31)
+- **Modulos Ativos** (5 modulos):
+  - Hospedagem do Sistema - R$39,90/mes
+  - Subdominio Personalizado - R$9,90/mes
+  - WhatsApp (Evolution API) - R$29,90/mes
+  - Mensagens de Aniversario - R$19,90/mes
+  - Lembretes de Pagamento - R$19,90/mes
+- **Modulos Disponiveis para Aquisicao** (8 modulos):
+  - Graficos e Analytics - R$49,90
+  - Relatorios em PDF - R$39,90
+  - App Instalavel (PWA) - R$39,90
+  - Acoes em Massa - R$39,90
+  - Exportacao Excel/CSV - R$29,90
+  - Tema Escuro (Dark Mode) - R$29,90
+  - Monitoramento em Tempo Real - R$29,90
+  - Validacao Avancada de CPF - R$19,90
+- **Modulos Em Breve** (5 modulos):
+  - Gateway de Pagamento - R$59,90
+  - Planos Diferenciados - R$49,90
+  - Personalizacao Visual - R$49,90
+  - Check-in em Eventos - R$39,90
+  - Gestao de Beneficios - R$29,90
+- Botao "Adquirir Modulo" abre dialog com recursos inclusos e botao WhatsApp
 
-# Iniciar servidor de desenvolvimento
-npm run dev
+### 9. Perfil (`/dashboard/perfil`)
+- Visualizacao de nome, email e cargo do usuario logado
+- Formulario de alteracao de senha (senha atual + nova + confirmacao)
+
+### 10. Suporte (`/dashboard/suporte`)
+- Central de ajuda com FAQ de 8 secoes (uma por modulo)
+- Perguntas e respostas detalhadas com passo a passo
+- Busca por texto nas perguntas/respostas
+- Secoes colapsaveis (accordion)
+- Grid de navegacao rapida
+- Botao de contato via WhatsApp
+
+### 11. Cron Job (`/api/cron`)
+- Endpoint para execucao diaria automatica
+- Envia mensagens de aniversario via WhatsApp
+- Envia lembretes de pagamento proximo do vencimento
+- Protegido por CRON_SECRET
+- Configurar em cron-job.org: `GET https://guarany.creativenext.com.br/api/cron?secret=<CRON_SECRET>` diariamente as 8h (America/Sao_Paulo)
+
+---
+
+## Sistema de Permissoes (5 Cargos)
+
+| Funcionalidade | Super Admin | Admin | Financeiro | Atendimento | Operador |
+|---|:---:|:---:|:---:|:---:|:---:|
+| Dashboard | x | x | x | x | x |
+| Socios | x | x | x | x | x |
+| Pagamentos | x | x | x | x | x |
+| Score | x | x | x | x | x |
+| WhatsApp | x | x | x | x | x |
+| Config | x | x | x | x | x |
+| Suporte | x | x | x | x | x |
+| Perfil | x | x | x | x | x |
+| Logs | x | x | - | - | - |
+| Usuarios | x | x | - | - | - |
+| Criar Admin | x | - | - | - | - |
+| Criar Super Admin | x | - | - | - | - |
+
+---
+
+## Estrutura do Projeto
+
+```
+src/
+├── app/
+│   ├── (auth)/
+│   │   ├── layout.tsx
+│   │   ├── login/page.tsx
+│   │   └── setup/page.tsx
+│   ├── (dashboard)/
+│   │   ├── layout.tsx                    # Layout com sidebar lateral
+│   │   └── dashboard/
+│   │       ├── page.tsx                  # Dashboard principal
+│   │       ├── configuracoes/page.tsx    # Configuracoes + modulos
+│   │       ├── logs/page.tsx             # Logs de auditoria
+│   │       ├── pagamentos/page.tsx       # Grade de pagamentos
+│   │       ├── perfil/page.tsx           # Perfil do usuario
+│   │       ├── score/page.tsx            # Score inadimplencia
+│   │       ├── socios/
+│   │       │   ├── page.tsx              # Lista de socios
+│   │       │   ├── novo/page.tsx         # Novo socio
+│   │       │   └── [id]/page.tsx         # Detalhe/editar socio
+│   │       ├── suporte/page.tsx          # Central de ajuda
+│   │       ├── usuarios/page.tsx         # Gestao de usuarios
+│   │       └── whatsapp/page.tsx         # Conexao WhatsApp
+│   ├── api/
+│   │   ├── auth/[...nextauth]/route.ts   # NextAuth handler
+│   │   ├── audit-logs/route.ts           # GET logs (admin)
+│   │   ├── cron/route.ts                 # Job diario
+│   │   ├── dashboard/stats/route.ts      # KPIs do dashboard
+│   │   ├── members/
+│   │   │   ├── route.ts                  # GET list, POST create
+│   │   │   ├── [id]/route.ts             # GET, PUT, DELETE
+│   │   │   └── score/route.ts            # GET score calculo
+│   │   ├── payments/
+│   │   │   ├── route.ts                  # GET list, POST create
+│   │   │   ├── [id]/route.ts             # PUT, DELETE
+│   │   │   └── grid/route.ts             # GET grade mensal
+│   │   ├── settings/route.ts             # GET, PUT config
+│   │   ├── setup/route.ts               # POST primeiro admin
+│   │   ├── user/change-password/route.ts # PUT alterar senha
+│   │   ├── users/
+│   │   │   ├── route.ts                  # GET list, POST create
+│   │   │   └── [id]/route.ts             # PUT update
+│   │   └── whatsapp/
+│   │       ├── disconnect/route.ts       # POST desconectar
+│   │       ├── qrcode/route.ts           # GET QR code
+│   │       └── status/route.ts           # GET status conexao
+│   ├── globals.css
+│   ├── layout.tsx
+│   └── page.tsx                          # Redirect para /dashboard
+├── components/
+│   ├── providers/SessionProvider.tsx
+│   └── ui/                               # 15+ componentes shadcn/ui
+├── hooks/
+│   ├── use-mobile.tsx
+│   └── use-toast.ts
+├── lib/
+│   ├── auth.ts                           # Config NextAuth (credentials, JWT)
+│   ├── db-migrate.ts                     # Migracao runtime de enums
+│   ├── prisma.ts                         # Prisma client singleton
+│   ├── utils.ts                          # cn() helper
+│   ├── utils/cpf.ts                      # Formatacao/validacao CPF
+│   └── whatsapp.ts                       # Evolution API client
+├── middleware.ts                          # Protecao de rotas
+└── types/
+    └── next-auth.d.ts                    # Tipagem NextAuth (id, role)
+
+prisma/
+├── schema.prisma                         # Schema completo
+├── seed.ts                               # Seed do admin inicial
+└── migrations/
+    └── 0_init/migration.sql              # Migracao inicial
 ```
 
-Acesse: http://localhost:3005
+---
 
-## 🔧 Variáveis de Ambiente
+## Banco de Dados (PostgreSQL)
 
-Crie um arquivo `.env.local`:
+### Modelos
+
+| Tabela | Descricao |
+|---|---|
+| `users` | Usuarios do sistema (5 cargos) |
+| `members` | Socios torcedores |
+| `payments` | Pagamentos mensais |
+| `system_settings` | Configuracoes (singleton) |
+| `notification_logs` | Logs de envio WhatsApp |
+| `audit_logs` | Auditoria de acoes |
+
+### Enums
+
+| Enum | Valores |
+|---|---|
+| `UserRole` | SUPER_ADMIN, ADMIN, FINANCIAL, ATTENDANT, OPERATOR |
+| `PaymentMethod` | PIX, CASH, CARD, BOLETO |
+| `PaymentStatus` | PENDING, PAID, OVERDUE, CANCELLED |
+| `NotificationType` | BIRTHDAY, PAYMENT_REMINDER, PAYMENT_OVERDUE, WELCOME |
+| `NotificationStatus` | PENDING, SENT, FAILED |
+
+### Relacoes principais
+
+- `User` 1:N `Member` (createdBy)
+- `User` 1:N `Payment` (registeredBy)
+- `User` 1:N `AuditLog`
+- `Member` 1:N `Payment` (cascade delete)
+- `Member` 1:N `NotificationLog` (set null)
+- `Payment` unique constraint: `[memberId, referenceMonth, referenceYear]`
+
+---
+
+## Variaveis de Ambiente
 
 ```env
 # Database
 DATABASE_URL="postgresql://user:password@host:5432/guarany_fc"
 
 # NextAuth
-NEXTAUTH_URL="http://localhost:3005"
-NEXTAUTH_SECRET="your-secret-here-min-32-chars"
+NEXTAUTH_URL="https://guarany.creativenext.com.br"
+NEXTAUTH_SECRET="chave-secreta-min-32-chars"
 
-# Evolution API (Opcional - Futuro)
-EVOLUTION_API_URL="https://api.example.com"
-EVOLUTION_API_KEY="your-key"
-EVOLUTION_INSTANCE="instance-name"
+# Evolution API (WhatsApp)
+EVOLUTION_API_URL="https://evolution.creativenext.com.br"
+EVOLUTION_API_KEY="sua-api-key"
+EVOLUTION_INSTANCE="GUARANYPDF"
+
+# Cron
+CRON_SECRET="sua-secret-cron"
+
+# App
+NODE_ENV="production"
 ```
 
-**Gerar NEXTAUTH_SECRET:**
-```bash
-openssl rand -base64 32
-```
+---
 
-## 🚢 Deploy no Coolify
-
-### 1. Criar Banco de Dados
-
-No servidor, crie o banco `guarany_fc`:
-
-```bash
-ssh -i ~/.ssh/servidorbr01 ubuntu@201.23.70.201
-docker exec <postgres-container> psql -U postgres -c "CREATE DATABASE guarany_fc OWNER <user>;"
-```
-
-### 2. Configurar Application no Coolify
-
-1. **Repository**: `https://github.com/LisboaCodes/guarany-fc.git`
-2. **Branch**: `main`
-3. **Build Command**: `npm run build`
-4. **Start Command**: `npm start`
-5. **Port**: `3005`
-6. **Domain**: `guarany.creativenext.com.br`
-
-### 3. Variáveis de Ambiente no Coolify
-
-Adicione:
-- `DATABASE_URL` (com credenciais do PostgreSQL)
-- `NEXTAUTH_URL` (http://guarany.creativenext.com.br)
-- `NEXTAUTH_SECRET` (gerado com openssl)
-
-**Importante**: Marque apenas "Available at Runtime" (NÃO marque "Available at Buildtime")
-
-### 4. Aplicar Migrações
-
-**Via Terminal do Container no Coolify:**
-```bash
-# No Coolify: Application > Terminal
-npx prisma migrate deploy
-```
-
-**Via SSH:**
-```bash
-# Conectar no servidor
-ssh -i ~/.ssh/servidorbr01 ubuntu@201.23.70.201
-
-# Encontrar o container do Guarany
-docker ps | grep guarany
-
-# Executar migração (substitua CONTAINER_ID)
-docker exec -it CONTAINER_ID npx prisma migrate deploy
-```
-
-### 5. Primeiro Acesso
-
-1. Acesse: `http://guarany.creativenext.com.br/setup`
-2. Crie o usuário **admin**
-3. Faça login em `/login`
-
-## 📊 Estrutura do Banco de Dados
-
-O schema Prisma inclui:
-
-- **users** - Usuários do sistema (Admin/Operador)
-- **members** - Sócios torcedores
-- **payments** - Pagamentos mensais
-- **system_settings** - Configurações do sistema
-- **notification_logs** - Logs de notificações WhatsApp
-- **audit_logs** - Logs de auditoria de todas as ações
-
-## 🗂️ Estrutura do Projeto
-
-```
-src/
-├── app/
-│   ├── (auth)/              # Rotas de autenticação
-│   │   ├── login/           # Página de login
-│   │   └── setup/           # Setup inicial (primeiro admin)
-│   ├── (dashboard)/         # Rotas protegidas
-│   │   └── dashboard/
-│   │       ├── page.tsx     # Dashboard principal
-│   │       ├── socios/      # Gestão de sócios
-│   │       │   ├── page.tsx           # Lista
-│   │       │   ├── novo/page.tsx      # Cadastro
-│   │       │   └── [id]/page.tsx      # Detalhes
-│   │       ├── pagamentos/  # Gestão de pagamentos
-│   │       │   └── page.tsx
-│   │       └── configuracoes/  # Configurações
-│   │           └── page.tsx
-│   └── api/                 # API Routes
-│       ├── auth/            # NextAuth
-│       ├── setup/           # Setup inicial
-│       ├── members/         # API de sócios
-│       │   ├── route.ts     # GET (list) e POST (create)
-│       │   └── [id]/        # GET, PUT, DELETE
-│       └── payments/        # API de pagamentos
-│           ├── route.ts     # GET (list) e POST (create)
-│           └── [id]/        # PUT, DELETE
-├── components/
-│   └── ui/                  # Componentes shadcn/ui
-│       ├── button.tsx
-│       ├── card.tsx
-│       ├── badge.tsx
-│       ├── table.tsx
-│       ├── dialog.tsx
-│       ├── select.tsx
-│       └── ... (15+ componentes)
-├── lib/
-│   ├── auth.ts              # Configuração NextAuth
-│   ├── prisma.ts            # Cliente Prisma
-│   └── utils.ts             # Utilitários (cn helper)
-└── hooks/
-    └── use-mobile.tsx       # Hook para detectar mobile
-
-prisma/
-├── schema.prisma            # Schema completo do banco
-└── migrations/              # Histórico de migrações
-
-scripts/
-└── migrate-production.sh    # Script helper para migrações
-```
-
-## 🛠️ Scripts Úteis
+## Instalacao Local
 
 ```bash
-# Desenvolvimento
-npm run dev              # Servidor dev (porta 3005)
-npm run build            # Build de produção
-npm start                # Servidor produção
-
-# Banco de Dados
-npx prisma migrate dev   # Criar e aplicar migração (dev)
-npx prisma migrate deploy # Aplicar migrações (prod)
-npx prisma studio        # Interface visual do banco
-npx prisma generate      # Gerar Prisma Client
-npx prisma db push       # Push schema sem migração
-
-# Outros
-npm run lint             # Verificar lint
+git clone https://github.com/LisboaCodes/guarany-fc.git
+cd guarany-fc
+npm install
+cp .env.example .env.local
+# Edite .env.local com suas configuracoes
+npx prisma db push
+npm run db:seed
+npm run dev
 ```
 
-## 📱 Funcionalidades Futuras
+Acesse: http://localhost:3000
 
-- [ ] Integração completa WhatsApp (Evolution API)
-- [ ] Mensagens automáticas de aniversário
-- [ ] Lembretes de pagamento automáticos
-- [ ] Dashboard com gráficos analytics (recharts)
-- [ ] Relatórios em PDF
-- [ ] Sistema de planos diferenciados (Bronze, Prata, Ouro)
-- [ ] Gestão de benefícios para sócios
-- [ ] Exportação de dados (Excel, CSV)
-- [ ] App mobile (React Native)
+---
 
-## 🔐 Sistema de Permissões
+## Deploy (Coolify)
 
-### Roles
+**Servidor**: Coolify v4
+**Build**: Nixpacks (auto-detect Node.js)
+**Proxy**: Traefik com SSL Let's Encrypt
+**Dominio**: guarany.creativenext.com.br
 
-- **ADMIN**: Acesso total ao sistema
-- **OPERATOR**: Acesso limitado (sem configurações)
+### Scripts
 
-### Funcionalidades por Role
+```bash
+npm run build       # prisma generate && next build
+npm start           # next start
+npm run db:seed     # tsx prisma/seed.ts
+npm run db:studio   # prisma studio
+```
 
-| Funcionalidade | Admin | Operator |
-|---------------|:-----:|:--------:|
-| Ver Dashboard | ✅ | ✅ |
-| Gerenciar Sócios | ✅ | ✅ |
-| Registrar Pagamentos | ✅ | ✅ |
-| Ver Relatórios | ✅ | ✅ |
-| Configurações | ✅ | ❌ |
-| Gerenciar Usuários | ✅ | ❌ |
-| Ver Audit Logs | ✅ | ❌ |
+### Primeiro Acesso
 
-## 🐛 Troubleshooting
+1. Acesse `/setup` para criar o primeiro usuario SUPER_ADMIN
+2. Login em `/login` com email e senha criados
 
-### Erro: "Prisma Client not found"
+---
+
+## Navegacao (Sidebar Lateral)
+
+| Menu | Rota | Icone | Acesso |
+|---|---|---|---|
+| Dashboard | /dashboard | LayoutDashboard | Todos |
+| Socios | /dashboard/socios | Users | Todos |
+| Pagamentos | /dashboard/pagamentos | DollarSign | Todos |
+| Score | /dashboard/score | BarChart3 | Todos |
+| WhatsApp | /dashboard/whatsapp | MessageSquare | Todos |
+| Logs | /dashboard/logs | FileText | Admin+ |
+| Usuarios | /dashboard/usuarios | UserCog | Admin+ |
+| Config | /dashboard/configuracoes | Settings | Todos |
+| Suporte | /dashboard/suporte | HelpCircle | Todos |
+
+Sidebar com:
+- Logo AA Guarany no topo
+- Botao de recolher/expandir (desktop)
+- Menu hamburger (mobile) com overlay
+- Usuario + cargo na parte inferior
+- Dropdown: Meu Perfil, Sair
+
+---
+
+## API Routes
+
+| Rota | Metodo | Descricao |
+|---|---|---|
+| `/api/auth/[...nextauth]` | GET, POST | Handler NextAuth |
+| `/api/setup` | POST | Criar primeiro admin |
+| `/api/dashboard/stats` | GET | KPIs + atividade recente |
+| `/api/members` | GET, POST | Listar/criar socios |
+| `/api/members/[id]` | GET, PUT | Detalhe/editar socio |
+| `/api/members/score` | GET | Score de inadimplencia |
+| `/api/payments` | GET, POST | Listar/criar pagamentos |
+| `/api/payments/[id]` | PUT, DELETE | Editar/excluir pagamento |
+| `/api/payments/grid` | GET | Grade mensal completa |
+| `/api/settings` | GET, PUT | Configuracoes do sistema |
+| `/api/users` | GET, POST | Listar/criar usuarios |
+| `/api/users/[id]` | PUT | Editar usuario |
+| `/api/user/change-password` | PUT | Alterar propria senha |
+| `/api/audit-logs` | GET | Logs de auditoria |
+| `/api/whatsapp/status` | GET | Status conexao WhatsApp |
+| `/api/whatsapp/qrcode` | GET | QR Code para conexao |
+| `/api/whatsapp/disconnect` | POST | Desconectar WhatsApp |
+| `/api/cron` | GET | Job diario (aniversarios + lembretes) |
+
+---
+
+## Troubleshooting
+
+### "Prisma Client not found"
 ```bash
 npx prisma generate
 ```
 
-### Erro: "Cannot connect to database"
+### "Cannot connect to database"
+- Verifique `DATABASE_URL` no `.env.local`
+- PostgreSQL rodando e acessivel
+- Banco `guarany_fc` existe
+- Credenciais corretas
 
-Verifique:
-1. `DATABASE_URL` está correta no `.env.local`
-2. PostgreSQL está rodando
-3. Banco de dados `guarany_fc` existe
-4. Credenciais estão corretas
-5. Firewall/Porta liberada
+### "NextAuth configuration error"
+- `NEXTAUTH_URL` configurada com protocolo (https://)
+- `NEXTAUTH_SECRET` com 32+ caracteres
 
-### Erro: "NextAuth configuration error"
+### QR Code WhatsApp retorna 500
+- Verifique `EVOLUTION_INSTANCE` (nome exato da instancia)
+- Verifique `EVOLUTION_API_URL` e `EVOLUTION_API_KEY`
+- Evolution API acessivel e rodando
 
-Verifique:
-1. `NEXTAUTH_URL` está configurada (http://...)
-2. `NEXTAUTH_SECRET` tem pelo menos 32 caracteres
-3. Formato da URL está correto (com protocolo)
-
-### Erro: Build falha no Coolify
-
-1. Verifique se `NODE_ENV` NÃO está marcada como "Available at Buildtime"
-2. Confirme que o `package.json` tem `postinstall: prisma generate`
-3. Veja os logs de build no Coolify
-
-### Porta 3005 já em uso
-
-```bash
-# Windows
-netstat -ano | findstr :3005
-taskkill /PID <PID> /F
-
-# Linux/Mac
-lsof -ti:3005 | xargs kill
-
-# Ou use outra porta
-PORT=3006 npm run dev
-```
-
-## 📞 Suporte
-
-Para dúvidas ou problemas:
-- **Issues**: [GitHub Issues](https://github.com/LisboaCodes/guarany-fc/issues)
-- **Email**: contato@guaranyfc.com.br
-
-## 📄 Licença
-
-© 2026 Associação Atlética Guarany - Todos os direitos reservados
+### SSL/HTTPS nao funciona
+- FQDN no Coolify deve usar `https://`
+- Traefik proxy deve estar rodando
+- `NEXTAUTH_URL` deve ser `https://`
 
 ---
 
-**Desenvolvido com 💚 para a Associação Atlética Guarany**
+## Licenca
+
+Todos os direitos reservados - Associacao Atletica Guarany 2026
+
+Desenvolvido por [CreativeNext](https://creativenext.com.br)
