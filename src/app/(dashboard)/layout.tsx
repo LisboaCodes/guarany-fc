@@ -21,6 +21,7 @@ import {
   FileText,
   UserCog,
   MessageSquare,
+  HelpCircle,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
@@ -46,6 +47,7 @@ const navigation = [
   { name: 'Logs', href: '/dashboard/logs', icon: FileText, adminOnly: true },
   { name: 'Usuarios', href: '/dashboard/usuarios', icon: UserCog, adminOnly: true },
   { name: 'Config', href: '/dashboard/configuracoes', icon: Settings },
+  { name: 'Suporte', href: '/dashboard/suporte', icon: HelpCircle },
 ]
 
 const userNavigation = [
