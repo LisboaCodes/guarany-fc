@@ -109,7 +109,7 @@ export default function PagamentosPage() {
   const fetchGrid = async () => {
     setLoading(true)
     try {
-      const res = await fetch(`/api/payments/grid?year=${selectedYear}`)
+      const res = await fetch(`/api/payments/grid?year=${selectedYear}`, { cache: 'no-store' })
       const data = await res.json()
       if (res.ok) {
         setGridData(data.grid)
@@ -124,7 +124,7 @@ export default function PagamentosPage() {
 
   const fetchMembers = async () => {
     try {
-      const res = await fetch('/api/members?limit=1000&active=true')
+      const res = await fetch('/api/members?limit=1000&active=true', { cache: 'no-store' })
       const data = await res.json()
       if (res.ok) {
         setMembers(data.members)

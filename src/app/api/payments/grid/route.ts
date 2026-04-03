@@ -135,7 +135,7 @@ export async function GET(request: NextRequest) {
       return b.referenceMonth - a.referenceMonth
     })
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       grid,
       year,
       membershipValue,
@@ -143,6 +143,8 @@ export async function GET(request: NextRequest) {
       totalMembers: members.length,
       totalEntries: grid.length,
     })
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate')
+    return response
   } catch (error) {
     console.error('Error building payment grid:', error)
     return NextResponse.json({ error: 'Erro ao carregar grade de pagamentos' }, { status: 500 })

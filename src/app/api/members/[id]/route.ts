@@ -36,7 +36,9 @@ export async function GET(
       return NextResponse.json({ error: 'Sócio não encontrado' }, { status: 404 })
     }
 
-    return NextResponse.json(member)
+    const response = NextResponse.json(member)
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate')
+    return response
   } catch (error) {
     console.error('Error fetching member:', error)
     return NextResponse.json({ error: 'Erro ao buscar sócio' }, { status: 500 })

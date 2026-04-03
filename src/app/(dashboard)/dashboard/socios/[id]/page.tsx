@@ -93,7 +93,7 @@ export default function SocioDetailPage() {
 
   const fetchMember = async () => {
     try {
-      const res = await fetch(`/api/members/${params.id}`)
+      const res = await fetch(`/api/members/${params.id}`, { cache: 'no-store' })
       const data = await res.json()
 
       if (res.ok) {

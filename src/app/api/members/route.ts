@@ -43,15 +43,29 @@ export async function GET(request: NextRequest) {
             select: { name: true }
           },
           payments: {
-            where: { status: 'PENDING' },
-            select: { id: true }
+            where: { status: { notIn: ['PAID', 'CANCELLED'] } },
+            select: { id: true, status: true, dueDate: true }
           }
         }
       }),
       prisma.member.count({ where })
     ])
 
-    return NextResponse.json({
+    // Auto-update PENDING payments that are past due date to OVERDUE
+    const now = new Date()
+    const memberIds = members.map((m: any) => m.id)
+    if (memberIds.length > 0) {
+      await prisma.payment.updateMany({
+        where: {
+          memberId: { in: memberIds },
+          status: 'PENDING',
+          dueDate: { lt: now }
+        },
+        data: { status: 'OVERDUE' }
+      })
+    }
+
+    const response = NextResponse.json({
       members,
       pagination: {
         total,
@@ -60,6 +74,8 @@ export async function GET(request: NextRequest) {
         totalPages: Math.ceil(total / limit)
       }
     })
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate')
+    return response
   } catch (error) {
     console.error('Error fetching members:', error)
     return NextResponse.json({ error: 'Erro ao buscar sócios' }, { status: 500 })

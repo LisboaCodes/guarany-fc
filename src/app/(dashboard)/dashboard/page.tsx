@@ -49,7 +49,7 @@ export default function DashboardPage() {
   const fetchDashboardData = async () => {
     setLoading(true)
     try {
-      const res = await fetch(`/api/dashboard/stats?days=${filterDays}`)
+      const res = await fetch(`/api/dashboard/stats?days=${filterDays}`, { cache: 'no-store' })
       const data = await res.json()
 
       if (res.ok) {

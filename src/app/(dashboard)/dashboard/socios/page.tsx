@@ -62,7 +62,7 @@ export default function SociosPage() {
       if (search) params.append('search', search)
       if (filter !== 'all') params.append('active', filter === 'active' ? 'true' : 'false')
 
-      const res = await fetch(`/api/members?${params}`)
+      const res = await fetch(`/api/members?${params}`, { cache: 'no-store' })
       const data = await res.json()
 
       if (res.ok) {

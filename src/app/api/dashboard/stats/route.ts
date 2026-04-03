@@ -227,7 +227,7 @@ export async function GET(request: NextRequest) {
       })
     )
 
-    return NextResponse.json({
+    const responseData = {
       stats: {
         activeMembers: {
           value: activeMembersCount,
@@ -252,7 +252,10 @@ export async function GET(request: NextRequest) {
       },
       recentActivities: formattedActivities,
       filterDays: days
-    })
+    }
+    const response = NextResponse.json(responseData)
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate')
+    return response
   } catch (error) {
     console.error('Error fetching dashboard stats:', error)
     return NextResponse.json(

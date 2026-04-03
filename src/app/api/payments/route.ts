@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
       prisma.payment.count({ where })
     ])
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       payments,
       pagination: {
         total,
@@ -63,6 +63,8 @@ export async function GET(request: NextRequest) {
         totalPages: Math.ceil(total / limit)
       }
     })
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate')
+    return response
   } catch (error) {
     console.error('Error fetching payments:', error)
     return NextResponse.json({ error: 'Erro ao buscar pagamentos' }, { status: 500 })
