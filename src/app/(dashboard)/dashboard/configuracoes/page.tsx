@@ -48,6 +48,9 @@ interface SystemSettings {
   evolutionInstance?: string
   birthdayMessageEnabled: boolean
   reminderMessageEnabled: boolean
+  mpAccessToken?: string | null
+  mpWebhookSecret?: string | null
+  mpEnabled?: boolean
 }
 
 interface Module {
@@ -67,6 +70,10 @@ export default function ConfiguracoesPage() {
   const [saving, setSaving] = useState(false)
   const [editedValue, setEditedValue] = useState('')
   const [editedDay, setEditedDay] = useState('')
+  const [mpToken, setMpToken] = useState('')
+  const [mpSecret, setMpSecret] = useState('')
+  const [mpEnabled, setMpEnabled] = useState(false)
+  const [savingMp, setSavingMp] = useState(false)
 
   const modules: Module[] = [
     {
@@ -337,6 +344,9 @@ export default function ConfiguracoesPage() {
         setSettings(data)
         setEditedValue(data.membershipValue.toString())
         setEditedDay(data.paymentDueDayOfMonth.toString())
+        setMpToken(data.mpAccessToken || '')
+        setMpSecret(data.mpWebhookSecret || '')
+        setMpEnabled(!!data.mpEnabled)
       }
     } catch (error) {
       console.error('Error fetching settings:', error)
@@ -404,6 +414,33 @@ export default function ConfiguracoesPage() {
       })
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleSaveMp = async () => {
+    setSavingMp(true)
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mpAccessToken: mpToken || null,
+          mpWebhookSecret: mpSecret || null,
+          mpEnabled,
+        }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setSettings(data)
+        toast({ title: 'Sucesso!', description: 'Credenciais Mercado Pago salvas' })
+      } else {
+        const error = await res.json()
+        toast({ title: 'Erro', description: error.error || 'Erro ao salvar', variant: 'destructive' })
+      }
+    } catch (error) {
+      toast({ title: 'Erro', description: 'Erro ao salvar credenciais', variant: 'destructive' })
+    } finally {
+      setSavingMp(false)
     }
   }
 
@@ -524,6 +561,95 @@ export default function ConfiguracoesPage() {
               </div>
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Mercado Pago Settings */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="bg-blue-500/10 p-3 rounded-lg">
+                <CreditCard className="h-6 w-6 text-blue-600" />
+              </div>
+              <div>
+                <CardTitle>Mercado Pago</CardTitle>
+                <CardDescription>Credenciais para cobrança PIX e Boleto automática</CardDescription>
+              </div>
+            </div>
+            <Badge className={mpEnabled ? 'bg-emerald-600' : 'bg-slate-400'}>
+              {mpEnabled ? 'Habilitado' : 'Desabilitado'}
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="mpAccessToken">Access Token</Label>
+            <Input
+              id="mpAccessToken"
+              type="password"
+              value={mpToken}
+              onChange={(e) => setMpToken(e.target.value)}
+              placeholder="APP_USR-... ou TEST-..."
+              className="font-mono text-xs"
+            />
+            <p className="text-xs text-muted-foreground">
+              Painel MP → Suas Integrações → Sua aplicação → Credenciais de produção/teste
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="mpWebhookSecret">Chave Secreta do Webhook</Label>
+            <Input
+              id="mpWebhookSecret"
+              type="password"
+              value={mpSecret}
+              onChange={(e) => setMpSecret(e.target.value)}
+              placeholder="Chave gerada na configuração do webhook"
+              className="font-mono text-xs"
+            />
+            <p className="text-xs text-muted-foreground">
+              Painel MP → Webhooks → URL: <code className="bg-muted px-1 rounded">{typeof window !== 'undefined' ? `${window.location.origin}/api/webhooks/mercadopago` : '/api/webhooks/mercadopago'}</code>
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3 pt-2">
+            <input
+              id="mpEnabled"
+              type="checkbox"
+              checked={mpEnabled}
+              onChange={(e) => setMpEnabled(e.target.checked)}
+              className="h-4 w-4 rounded border-gray-300"
+            />
+            <Label htmlFor="mpEnabled" className="cursor-pointer">
+              Habilitar cobranças via Mercado Pago
+            </Label>
+          </div>
+
+          <div className="flex gap-3 pt-4">
+            <Button
+              onClick={handleSaveMp}
+              disabled={savingMp}
+              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+            >
+              {savingMp ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Salvando...</>
+              ) : (
+                <><Save className="mr-2 h-4 w-4" />Salvar Credenciais</>
+              )}
+            </Button>
+          </div>
+
+          <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded text-xs space-y-1">
+            <p className="font-semibold text-blue-900">Como usar:</p>
+            <ol className="list-decimal list-inside text-blue-800 space-y-1">
+              <li>Crie uma conta em mercadopago.com.br e ative o "Modo Desenvolvedor"</li>
+              <li>Em "Suas Integrações", crie uma aplicação e copie o Access Token</li>
+              <li>Configure o webhook apontando para a URL acima e copie a chave secreta</li>
+              <li>Cole as credenciais aqui e marque "Habilitar"</li>
+              <li>Na tela de Pagamentos, use o botão "Cobrar PIX" para gerar cobranças</li>
+            </ol>
+          </div>
         </CardContent>
       </Card>
 

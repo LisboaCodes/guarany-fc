@@ -77,6 +77,9 @@ export async function PUT(request: NextRequest) {
       reminderMessageEnabled,
       reminderMessageTemplate,
       reminderDaysBeforeDue,
+      mpAccessToken,
+      mpWebhookSecret,
+      mpEnabled,
     } = body
 
     // Validações
@@ -112,6 +115,9 @@ export async function PUT(request: NextRequest) {
         ...(reminderMessageEnabled !== undefined && { reminderMessageEnabled }),
         ...(reminderMessageTemplate !== undefined && { reminderMessageTemplate }),
         ...(reminderDaysBeforeDue !== undefined && { reminderDaysBeforeDue }),
+        ...(mpAccessToken !== undefined && { mpAccessToken }),
+        ...(mpWebhookSecret !== undefined && { mpWebhookSecret }),
+        ...(mpEnabled !== undefined && { mpEnabled }),
       },
       create: {
         id: 'singleton',
@@ -125,16 +131,24 @@ export async function PUT(request: NextRequest) {
         reminderMessageEnabled: reminderMessageEnabled ?? true,
         reminderMessageTemplate,
         reminderDaysBeforeDue: reminderDaysBeforeDue || 5,
+        mpAccessToken,
+        mpWebhookSecret,
+        mpEnabled: mpEnabled ?? false,
       }
     })
 
-    // Registrar auditoria
+    // Registrar auditoria (mascarando segredos)
+    const safeChanges = { ...body }
+    if (safeChanges.mpAccessToken) safeChanges.mpAccessToken = '***'
+    if (safeChanges.mpWebhookSecret) safeChanges.mpWebhookSecret = '***'
+    if (safeChanges.evolutionApiKey) safeChanges.evolutionApiKey = '***'
+
     await prisma.auditLog.create({
       data: {
         action: 'UPDATE',
         entityType: 'SystemSettings',
         entityId: settings.id,
-        changes: body,
+        changes: safeChanges,
         userId: session.user.id,
       }
     })

@@ -80,6 +80,14 @@ model Payment {
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
+  // Mercado Pago
+  mpPaymentId     String?  @unique
+  mpQrCode        String?  // copia-e-cola PIX
+  mpQrCodeBase64  String?  @db.Text // imagem QR base64
+  mpTicketUrl     String?  // URL do boleto/comprovante
+  mpStatus        String?  // status bruto MP (approved, pending, rejected, etc)
+  mpExpiresAt     DateTime?
+
   // Foreign Keys
   memberId       String
   member         Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
@@ -91,6 +99,7 @@ model Payment {
   @@index([status])
   @@index([referenceMonth, referenceYear])
   @@index([dueDate])
+  @@index([mpPaymentId])
   @@map("payments")
 }
 
@@ -120,6 +129,11 @@ model SystemSettings {
   evolutionApiUrl      String?
   evolutionApiKey      String?
   evolutionInstance    String?
+
+  // Mercado Pago
+  mpAccessToken    String?
+  mpWebhookSecret  String?
+  mpEnabled        Boolean @default(false)
 
   // Templates de mensagens
   birthdayMessageEnabled Boolean @default(true)

@@ -45,6 +45,10 @@ import {
   TrendingUp,
   TrendingDown,
   Calendar,
+  QrCode,
+  Copy,
+  FileText,
+  ExternalLink,
 } from 'lucide-react'
 
 interface GridEntry {
@@ -85,6 +89,22 @@ export default function PagamentosPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
   const [membershipValue, setMembershipValue] = useState(50)
+  const [chargingId, setChargingId] = useState<string | null>(null)
+  const [boletoId, setBoletoId] = useState<string | null>(null)
+  const [pixDialog, setPixDialog] = useState<{
+    open: boolean
+    qrCodeBase64: string
+    qrCode: string
+    memberName: string
+    amount: number
+  }>({ open: false, qrCodeBase64: '', qrCode: '', memberName: '', amount: 0 })
+  const [boletoDialog, setBoletoDialog] = useState<{
+    open: boolean
+    ticketUrl: string
+    barcode: string
+    memberName: string
+    amount: number
+  }>({ open: false, ticketUrl: '', barcode: '', memberName: '', amount: 0 })
 
   const currentMonth = new Date().getMonth() + 1
   const currentYear = new Date().getFullYear()
@@ -199,6 +219,81 @@ export default function PagamentosPage() {
       setError(err.message)
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleChargePix = async (entry: GridEntry) => {
+    const paymentId = await ensurePaymentExists(entry)
+    if (!paymentId) return
+
+    setChargingId(paymentId)
+    try {
+      const res = await fetch(`/api/payments/${paymentId}/charge`, { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Erro ao gerar cobrança')
+
+      setPixDialog({
+        open: true,
+        qrCodeBase64: data.qrCodeBase64,
+        qrCode: data.qrCode,
+        memberName: entry.memberName,
+        amount: entry.amount,
+      })
+      fetchGrid()
+    } catch (err: any) {
+      alert(err.message)
+    } finally {
+      setChargingId(null)
+    }
+  }
+
+  const ensurePaymentExists = async (entry: GridEntry): Promise<string | null> => {
+    if (!entry.isVirtual && entry.id) return entry.id
+    try {
+      const createRes = await fetch('/api/payments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          memberId: entry.memberId,
+          amount: entry.amount,
+          method: 'PIX',
+          status: 'PENDING',
+          referenceMonth: entry.referenceMonth,
+          referenceYear: entry.referenceYear,
+          dueDate: entry.dueDate,
+        }),
+      })
+      const createData = await createRes.json()
+      if (!createRes.ok) throw new Error(createData.error || 'Erro ao criar pagamento')
+      return createData.id
+    } catch (err: any) {
+      alert(err.message)
+      return null
+    }
+  }
+
+  const handleChargeBoleto = async (entry: GridEntry) => {
+    const paymentId = await ensurePaymentExists(entry)
+    if (!paymentId) return
+
+    setBoletoId(paymentId)
+    try {
+      const res = await fetch(`/api/payments/${paymentId}/boleto`, { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Erro ao gerar boleto')
+
+      setBoletoDialog({
+        open: true,
+        ticketUrl: data.ticketUrl,
+        barcode: data.barcode || '',
+        memberName: entry.memberName,
+        amount: entry.amount,
+      })
+      fetchGrid()
+    } catch (err: any) {
+      alert(err.message)
+    } finally {
+      setBoletoId(null)
     }
   }
 
@@ -533,31 +628,77 @@ export default function PagamentosPage() {
                       <TableCell className="text-sm">{formatDate(entry.dueDate)}</TableCell>
                       <TableCell>{getStatusBadge(entry.status)}</TableCell>
                       <TableCell>
-                        {entry.isVirtual ? (
-                          <Button
-                            size="sm"
-                            onClick={() => handleQuickRegister(entry)}
-                            className="bg-[#006437] hover:bg-[#005030] text-white text-xs"
-                          >
-                            <DollarSign className="mr-1 h-3 w-3" />
-                            Registrar
-                          </Button>
-                        ) : entry.status === 'PENDING' || entry.status === 'OVERDUE' ? (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleMarkAsPaid(entry.id!)}
-                            className="text-emerald-600 border-emerald-600 hover:bg-emerald-50 text-xs"
-                          >
-                            <CheckCircle className="mr-1 h-3 w-3" />
-                            Marcar Pago
-                          </Button>
-                        ) : entry.status === 'PAID' ? (
-                          <span className="text-xs text-emerald-600 font-medium flex items-center gap-1">
-                            <CheckCircle className="h-3 w-3" />
-                            {entry.paidAt ? formatDate(entry.paidAt) : 'Confirmado'}
-                          </span>
-                        ) : null}
+                        <div className="flex flex-wrap gap-1">
+                          {entry.isVirtual ? (
+                            <>
+                              <Button
+                                size="sm"
+                                onClick={() => handleQuickRegister(entry)}
+                                className="bg-[#006437] hover:bg-[#005030] text-white text-xs"
+                              >
+                                <DollarSign className="mr-1 h-3 w-3" />
+                                Registrar
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                disabled={chargingId !== null || boletoId !== null}
+                                onClick={() => handleChargePix(entry)}
+                                className="text-blue-600 border-blue-600 hover:bg-blue-50 text-xs"
+                              >
+                                {chargingId ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <QrCode className="mr-1 h-3 w-3" />}
+                                PIX
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                disabled={chargingId !== null || boletoId !== null}
+                                onClick={() => handleChargeBoleto(entry)}
+                                className="text-orange-600 border-orange-600 hover:bg-orange-50 text-xs"
+                              >
+                                {boletoId ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <FileText className="mr-1 h-3 w-3" />}
+                                Boleto
+                              </Button>
+                            </>
+                          ) : entry.status === 'PENDING' || entry.status === 'OVERDUE' ? (
+                            <>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleMarkAsPaid(entry.id!)}
+                                className="text-emerald-600 border-emerald-600 hover:bg-emerald-50 text-xs"
+                              >
+                                <CheckCircle className="mr-1 h-3 w-3" />
+                                Pago
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                disabled={chargingId === entry.id || boletoId === entry.id}
+                                onClick={() => handleChargePix(entry)}
+                                className="text-blue-600 border-blue-600 hover:bg-blue-50 text-xs"
+                              >
+                                {chargingId === entry.id ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <QrCode className="mr-1 h-3 w-3" />}
+                                PIX
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                disabled={chargingId === entry.id || boletoId === entry.id}
+                                onClick={() => handleChargeBoleto(entry)}
+                                className="text-orange-600 border-orange-600 hover:bg-orange-50 text-xs"
+                              >
+                                {boletoId === entry.id ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <FileText className="mr-1 h-3 w-3" />}
+                                Boleto
+                              </Button>
+                            </>
+                          ) : entry.status === 'PAID' ? (
+                            <span className="text-xs text-emerald-600 font-medium flex items-center gap-1">
+                              <CheckCircle className="h-3 w-3" />
+                              {entry.paidAt ? formatDate(entry.paidAt) : 'Confirmado'}
+                            </span>
+                          ) : null}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -567,6 +708,127 @@ export default function PagamentosPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Boleto Dialog */}
+      <Dialog open={boletoDialog.open} onOpenChange={(open) => setBoletoDialog({ ...boletoDialog, open })}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-orange-600" />
+              Boleto gerado
+            </DialogTitle>
+            <DialogDescription>
+              {boletoDialog.memberName} — {formatCurrency(boletoDialog.amount)}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <Button
+              type="button"
+              onClick={() => window.open(boletoDialog.ticketUrl, '_blank')}
+              className="w-full bg-orange-600 hover:bg-orange-700"
+            >
+              <ExternalLink className="mr-2 h-4 w-4" />
+              Abrir Boleto
+            </Button>
+
+            {boletoDialog.barcode && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Código de barras</label>
+                <div className="flex gap-2">
+                  <Input
+                    value={boletoDialog.barcode}
+                    readOnly
+                    className="font-mono text-xs"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => navigator.clipboard.writeText(boletoDialog.barcode)}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            <div className="bg-emerald-50 border-l-4 border-emerald-500 p-3 rounded text-sm">
+              <p className="text-emerald-800">
+                ✓ Boleto enviado automaticamente para o sócio via WhatsApp.<br />
+                Compensação leva 1-2 dias úteis após o pagamento.
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button onClick={() => setBoletoDialog({ ...boletoDialog, open: false })}>
+              Fechar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* PIX QR Code Dialog */}
+      <Dialog open={pixDialog.open} onOpenChange={(open) => setPixDialog({ ...pixDialog, open })}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <QrCode className="h-5 w-5 text-[#006437]" />
+              Cobrança PIX gerada
+            </DialogTitle>
+            <DialogDescription>
+              {pixDialog.memberName} — {formatCurrency(pixDialog.amount)}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {pixDialog.qrCodeBase64 && (
+              <div className="flex justify-center bg-white p-4 rounded-lg border">
+                <img
+                  src={`data:image/png;base64,${pixDialog.qrCodeBase64}`}
+                  alt="QR Code PIX"
+                  className="w-64 h-64"
+                />
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Copia e cola PIX</label>
+              <div className="flex gap-2">
+                <Input
+                  value={pixDialog.qrCode}
+                  readOnly
+                  className="font-mono text-xs"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    navigator.clipboard.writeText(pixDialog.qrCode)
+                  }}
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+
+            <div className="bg-emerald-50 border-l-4 border-emerald-500 p-3 rounded text-sm">
+              <p className="text-emerald-800">
+                ✓ QR enviado automaticamente para o sócio via WhatsApp.<br />
+                A confirmação do pagamento é automática.
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button onClick={() => setPixDialog({ ...pixDialog, open: false })}>
+              Fechar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Register Payment Dialog */}
       <Dialog open={showDialog} onOpenChange={setShowDialog}>

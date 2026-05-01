@@ -111,6 +111,55 @@ export async function sendPaymentNotification(
   })
 }
 
+export async function sendPixChargeMessage(
+  member: { id: string; name: string; phone: string },
+  payment: { amount: number; referenceMonth: number; referenceYear: number; dueDate: Date },
+  pix: { qrCode: string; ticketUrl: string | null },
+) {
+  const months = [
+    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+  ]
+  const monthName = months[payment.referenceMonth - 1]
+  const amount = Number(payment.amount).toFixed(2).replace('.', ',')
+  const dueFormatted = payment.dueDate.toLocaleDateString('pt-BR')
+
+  const ticketLine = pix.ticketUrl ? `\n\n🔗 Ou pague pelo link:\n${pix.ticketUrl}` : ''
+
+  const message = `💚 *Cobrança PIX — AA Guarany FC*\n\nOlá, *${member.name}*!\n\nSegue o PIX da sua mensalidade de *${monthName}/${payment.referenceYear}*.\n\n💰 Valor: *R$ ${amount}*\n📅 Vencimento: ${dueFormatted}\n\n*Copia e cola PIX:*\n\`\`\`${pix.qrCode}\`\`\`${ticketLine}\n\n_Após o pagamento a confirmação é automática._\n\n🟢⚪⚽ _AA Guarany FC_`
+
+  return sendWhatsAppMessage({
+    phone: member.phone,
+    message,
+    memberId: member.id,
+    type: 'PAYMENT_REMINDER',
+  })
+}
+
+export async function sendBoletoChargeMessage(
+  member: { id: string; name: string; phone: string },
+  payment: { amount: number; referenceMonth: number; referenceYear: number; dueDate: Date },
+  boleto: { ticketUrl: string; barcode: string | null },
+) {
+  const months = [
+    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+  ]
+  const monthName = months[payment.referenceMonth - 1]
+  const amount = Number(payment.amount).toFixed(2).replace('.', ',')
+  const dueFormatted = payment.dueDate.toLocaleDateString('pt-BR')
+  const barcodeLine = boleto.barcode ? `\n\n*Código de barras:*\n\`\`\`${boleto.barcode}\`\`\`` : ''
+
+  const message = `📄 *Boleto — AA Guarany FC*\n\nOlá, *${member.name}*!\n\nSegue o boleto da sua mensalidade de *${monthName}/${payment.referenceYear}*.\n\n💰 Valor: *R$ ${amount}*\n📅 Vencimento: ${dueFormatted}\n\n🔗 Acesse o boleto:\n${boleto.ticketUrl}${barcodeLine}\n\n_A confirmação do pagamento é automática (1-2 dias úteis)._\n\n🟢⚪⚽ _AA Guarany FC_`
+
+  return sendWhatsAppMessage({
+    phone: member.phone,
+    message,
+    memberId: member.id,
+    type: 'PAYMENT_REMINDER',
+  })
+}
+
 export async function sendBirthdayMessage(member: { id: string; name: string; phone: string }) {
   const message = `🎉 *Feliz Aniversário, ${member.name}!* 🎂\n\nToda a família *AA Guarany FC* deseja a você um dia muito especial! 🟢⚪\n\nObrigado por fazer parte do nosso time! ⚽\n\nUm grande abraço!\n_Diretoria AA Guarany FC_`
 
