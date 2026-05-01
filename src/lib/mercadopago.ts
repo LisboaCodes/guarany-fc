@@ -163,7 +163,8 @@ export async function createBoletoCharge(input: CreateBoletoChargeInput): Promis
     },
   })
 
-  const txData = result.transaction_details
+  const resultAny = result as any
+  const txData = resultAny.transaction_details
   const ticketUrl = txData?.external_resource_url
   if (!result.id || !ticketUrl) {
     throw new Error('Resposta inválida do Mercado Pago: boleto não gerado')
@@ -172,7 +173,7 @@ export async function createBoletoCharge(input: CreateBoletoChargeInput): Promis
   return {
     mpPaymentId: String(result.id),
     ticketUrl,
-    barcode: result.barcode?.content || null,
+    barcode: resultAny.barcode?.content || null,
     expiresAt: input.expiresAt,
     status: result.status || 'pending',
   }
