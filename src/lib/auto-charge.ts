@@ -4,6 +4,15 @@ import { sendPixChargeMessage, sendBoletoChargeMessage } from './whatsapp'
 
 export type ChargeMethod = 'PIX' | 'BOLETO'
 
+export interface BoletoAddress {
+  zipCode: string
+  streetName: string
+  streetNumber: string
+  neighborhood: string
+  city: string
+  federalUnit: string
+}
+
 export interface MemberChargeOptions {
   memberId: string
   method?: ChargeMethod
@@ -13,6 +22,11 @@ export interface MemberChargeOptions {
   dueDate?: Date
   registeredById: string
   notifyWhatsApp?: boolean
+  // Quando true, ignora cobrança existente e gera nova no MP.
+  // Use para acionamento manual; o cron deixa false para nao duplicar.
+  force?: boolean
+  // Obrigatorio quando method=BOLETO (MP exige endereco estruturado).
+  address?: BoletoAddress
 }
 
 export interface MemberChargeResult {
@@ -76,6 +90,7 @@ export async function chargeMember(opts: MemberChargeOptions): Promise<MemberCha
   }
 
   if (
+    !opts.force &&
     payment.mpPaymentId &&
     payment.mpExpiresAt &&
     payment.mpExpiresAt > new Date() &&
@@ -156,6 +171,12 @@ export async function chargeMember(opts: MemberChargeOptions): Promise<MemberCha
     }
   }
 
+  if (!opts.address) {
+    throw new Error(
+      'Boleto exige endereço (CEP, rua, número, bairro, cidade, UF) — preencha no dialog de cobrança',
+    )
+  }
+
   const expiresAt = new Date(payment.dueDate)
   expiresAt.setHours(23, 59, 59, 999)
   if (expiresAt < new Date()) {
@@ -174,6 +195,7 @@ export async function chargeMember(opts: MemberChargeOptions): Promise<MemberCha
       firstName,
       lastName: rest.join(' '),
       cpf: member.cpf,
+      address: opts.address,
     },
   })
 

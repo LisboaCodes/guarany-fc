@@ -83,6 +83,12 @@ export default function SociosPage() {
     referenceMonth: string
     referenceYear: string
     amount: string
+    addrZip: string
+    addrStreet: string
+    addrNumber: string
+    addrNeighborhood: string
+    addrCity: string
+    addrFederalUnit: string
   }>({
     open: false,
     member: null,
@@ -90,6 +96,12 @@ export default function SociosPage() {
     referenceMonth: String(currentMonth),
     referenceYear: String(currentYear),
     amount: '',
+    addrZip: '',
+    addrStreet: '',
+    addrNumber: '',
+    addrNeighborhood: '',
+    addrCity: '',
+    addrFederalUnit: '',
   })
   const [chargingId, setChargingId] = useState<string | null>(null)
   const [chargeError, setChargeError] = useState('')
@@ -167,6 +179,12 @@ export default function SociosPage() {
       referenceMonth: String(currentMonth),
       referenceYear: String(currentYear),
       amount: '',
+      addrZip: '',
+      addrStreet: '',
+      addrNumber: '',
+      addrNeighborhood: '',
+      addrCity: '',
+      addrFederalUnit: '',
     })
   }
 
@@ -174,6 +192,21 @@ export default function SociosPage() {
     if (!chargeDialog.member) return
     const member = chargeDialog.member
     setChargeError('')
+
+    if (chargeDialog.method === 'BOLETO') {
+      const missing: string[] = []
+      if (!chargeDialog.addrZip) missing.push('CEP')
+      if (!chargeDialog.addrStreet) missing.push('rua')
+      if (!chargeDialog.addrNumber) missing.push('número')
+      if (!chargeDialog.addrNeighborhood) missing.push('bairro')
+      if (!chargeDialog.addrCity) missing.push('cidade')
+      if (!chargeDialog.addrFederalUnit) missing.push('UF')
+      if (missing.length) {
+        setChargeError(`Endereço obrigatório para boleto. Preencha: ${missing.join(', ')}`)
+        return
+      }
+    }
+
     setChargingId(member.id)
     try {
       const body: any = {
@@ -182,6 +215,16 @@ export default function SociosPage() {
         referenceYear: Number(chargeDialog.referenceYear),
       }
       if (chargeDialog.amount) body.amount = Number(chargeDialog.amount)
+      if (chargeDialog.method === 'BOLETO') {
+        body.address = {
+          zipCode: chargeDialog.addrZip,
+          streetName: chargeDialog.addrStreet,
+          streetNumber: chargeDialog.addrNumber,
+          neighborhood: chargeDialog.addrNeighborhood,
+          city: chargeDialog.addrCity,
+          federalUnit: chargeDialog.addrFederalUnit.toUpperCase(),
+        }
+      }
 
       const res = await fetch(`/api/members/${member.id}/charge`, {
         method: 'POST',
@@ -543,6 +586,87 @@ export default function SociosPage() {
                 }
               />
             </div>
+
+            {chargeDialog.method === 'BOLETO' && (
+              <div className="space-y-3 border-t pt-3">
+                <p className="text-sm font-semibold text-orange-700">
+                  Endereço do pagador (obrigatório para boleto)
+                </p>
+                <div className="grid gap-3 md:grid-cols-3">
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium">CEP *</label>
+                    <Input
+                      placeholder="00000-000"
+                      value={chargeDialog.addrZip}
+                      onChange={(e) =>
+                        setChargeDialog((d) => ({ ...d, addrZip: e.target.value }))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-1 md:col-span-2">
+                    <label className="text-xs font-medium">Rua *</label>
+                    <Input
+                      placeholder="Av. Brasil"
+                      value={chargeDialog.addrStreet}
+                      onChange={(e) =>
+                        setChargeDialog((d) => ({ ...d, addrStreet: e.target.value }))
+                      }
+                    />
+                  </div>
+                </div>
+                <div className="grid gap-3 md:grid-cols-3">
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium">Número *</label>
+                    <Input
+                      placeholder="123"
+                      value={chargeDialog.addrNumber}
+                      onChange={(e) =>
+                        setChargeDialog((d) => ({ ...d, addrNumber: e.target.value }))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-1 md:col-span-2">
+                    <label className="text-xs font-medium">Bairro *</label>
+                    <Input
+                      placeholder="Centro"
+                      value={chargeDialog.addrNeighborhood}
+                      onChange={(e) =>
+                        setChargeDialog((d) => ({
+                          ...d,
+                          addrNeighborhood: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+                </div>
+                <div className="grid gap-3 md:grid-cols-3">
+                  <div className="space-y-1 md:col-span-2">
+                    <label className="text-xs font-medium">Cidade *</label>
+                    <Input
+                      placeholder="Sobral"
+                      value={chargeDialog.addrCity}
+                      onChange={(e) =>
+                        setChargeDialog((d) => ({ ...d, addrCity: e.target.value }))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium">UF *</label>
+                    <Input
+                      placeholder="CE"
+                      maxLength={2}
+                      value={chargeDialog.addrFederalUnit}
+                      onChange={(e) =>
+                        setChargeDialog((d) => ({
+                          ...d,
+                          addrFederalUnit: e.target.value.toUpperCase(),
+                        }))
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded text-xs text-blue-800">
               ✉️ O link de pagamento é enviado automaticamente via WhatsApp para o

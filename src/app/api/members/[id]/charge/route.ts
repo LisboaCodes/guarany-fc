@@ -24,6 +24,19 @@ export async function POST(
     const referenceYear = body.referenceYear ? Number(body.referenceYear) : undefined
     const amount = body.amount ? Number(body.amount) : undefined
     const notifyWhatsApp = body.notifyWhatsApp !== false
+    // Acionamento manual sempre forca regenerar (evita reusar cobranca antiga
+    // de credenciais sandbox). Auto-charge do cron passa force=false.
+    const force = body.force !== false
+    const address = body.address && method === 'BOLETO'
+      ? {
+          zipCode: String(body.address.zipCode || ''),
+          streetName: String(body.address.streetName || ''),
+          streetNumber: String(body.address.streetNumber || ''),
+          neighborhood: String(body.address.neighborhood || ''),
+          city: String(body.address.city || ''),
+          federalUnit: String(body.address.federalUnit || ''),
+        }
+      : undefined
 
     const result = await chargeMember({
       memberId: id,
@@ -33,6 +46,8 @@ export async function POST(
       amount,
       registeredById: session.user.id,
       notifyWhatsApp,
+      force,
+      address,
     })
 
     await prisma.auditLog.create({
