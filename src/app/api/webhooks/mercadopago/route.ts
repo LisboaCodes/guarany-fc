@@ -32,7 +32,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'invalid signature' }, { status: 401 })
     }
 
-    const mpPayment = await getMpPayment(dataId)
+    let mpPayment: any
+    try {
+      mpPayment = await getMpPayment(dataId)
+    } catch (fetchErr: any) {
+      // Pagamento não existe no MP (simulação do painel envia id 123456,
+      // ou pagamento foi excluído). Responde 200 para o MP não retentar
+      // e o simulador não marcar como falha.
+      console.warn(`[MP Webhook] getMpPayment falhou para ${dataId}:`, fetchErr?.message || fetchErr)
+      return NextResponse.json({
+        received: true,
+        ignored: 'payment not found in mercadopago',
+        dataId,
+      })
+    }
 
     const externalReference = mpPayment.external_reference
     const mpStatus = mpPayment.status || 'pending'
