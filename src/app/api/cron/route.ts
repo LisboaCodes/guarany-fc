@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { checkAndSendBirthdayMessages, checkAndSendPaymentReminders } from '@/lib/whatsapp'
+import { autoChargeOnDueDay } from '@/lib/auto-charge'
 
-// GET /api/cron - Run daily checks (birthday + payment reminders)
+// GET /api/cron - Run daily checks (birthday + payment reminders + auto charge)
 // Call this endpoint daily via external cron (e.g., cron-job.org)
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
@@ -16,13 +17,15 @@ export async function GET(request: NextRequest) {
 
     await checkAndSendBirthdayMessages()
     await checkAndSendPaymentReminders()
+    const autoChargeReport = await autoChargeOnDueDay()
 
     console.log('[Cron] Verificações concluídas!')
 
     return NextResponse.json({
       success: true,
       timestamp: new Date().toISOString(),
-      message: 'Verificações de aniversário e pagamentos concluídas'
+      message: 'Verificações de aniversário, lembretes e cobrança automática concluídas',
+      autoCharge: autoChargeReport,
     })
   } catch (error: any) {
     console.error('[Cron] Erro:', error)
